@@ -42,10 +42,15 @@ import com.shadowcheck.mobile.ui.screens.NetworkStats
 import com.shadowcheck.mobile.ui.screens.StatsScreen
 import com.shadowcheck.mobile.rebuilt.ui.screens.WigleScreen
 import com.shadowcheck.mobile.ui.screens.settings.SettingsScreen
+import com.shadowcheck.mobile.util.EmulatorHelper
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Start mock scanner if running on emulator
+        EmulatorHelper.startMockScannerIfEmulator(this)
+        
         setContent {
             ShadowCheckTheme {
                 MainScreen()
