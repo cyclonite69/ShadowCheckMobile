@@ -15,30 +15,28 @@ import javax.inject.Inject
 
 @HiltViewModel
 class BluetoothViewModel @Inject constructor(
-    private val getAllBluetoothDevicesUseCase: GetAllBluetoothDevicesUseCase,
-    private val getNearbyBluetoothDevicesUseCase: GetNearbyBluetoothDevicesUseCase
 ) : ViewModel() {
 
     private val _devices = MutableStateFlow<List<BluetoothDevice>>(emptyList())
     val devices: StateFlow<List<BluetoothDevice>> = _devices.asStateFlow()
 
     init {
-        loadAllDevices()
+        // loadAllDevices()
     }
 
     fun loadAllDevices() {
-        getAllBluetoothDevicesUseCase()
-            .onEach { result ->
-                _devices.value = result
-            }
-            .launchIn(viewModelScope)
+        // getAllBluetoothDevicesUseCase()
+        //     .onEach { result ->
+        //         _devices.value = result
+        //     }
+        //     .launchIn(viewModelScope)
     }
 
     fun findNearbyDevices(rssiThreshold: Int = -70) {
-        getNearbyBluetoothDevicesUseCase(rssiThreshold)
-            .onEach { result ->
-                _devices.value = result
-            }
-            .launchIn(viewModelScope)
+        // getNearbyBluetoothDevicesUseCase(rssiThreshold)
+        //     .onEach { result ->
+        //         _devices.value = result
+        //     }
+        //     .launchIn(viewModelScope)
     }
 }
