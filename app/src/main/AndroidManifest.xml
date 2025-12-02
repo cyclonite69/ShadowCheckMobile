@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools" android:versionCode="1" android:versionName="1.0.0" android:compileSdkVersion="35" android:compileSdkVersionCodename="15" platformBuildVersionCode="35" platformBuildVersionName="15">
+    <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="35"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
+    <uses-permission android:name="android.permission.BLUETOOTH"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION"/>
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
+    <uses-feature android:name="android.hardware.camera.ar" android:required="false"/>
+    <queries>
+        <package android:name="com.google.android.apps.maps"/>
+        <package android:name="com.google.ar.core"/>
+        <package android:name="com.android.vending"/>
+        <intent>
+            <action android:name="com.google.android.play.core.install.BIND_INSTALL_SERVICE"/>
+        </intent>
+    </queries>
+    <uses-feature android:glEsVersion="0x30000" android:required="true"/>
+    <uses-feature android:name="android.hardware.wifi" android:required="false"/>
+    <permission android:name="com.shadowcheck.mobile.rebuilt.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" android:protectionLevel="signature"/>
+    <uses-permission android:name="com.shadowcheck.mobile.rebuilt.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"/>
+    <application android:label="@string/app_name" android:icon="@mipmap/ic_launcher" android:debuggable="true" android:allowBackup="true" android:largeHeap="true" android:supportsRtl="true"
+        android:resizeableActivity="true" android:appComponentFactory="androidx.core.app.CoreComponentFactory">
+        <meta-data android:name="MAPBOX_ACCESS_TOKEN" android:value=""/>
+        <meta-data android:name="com.google.android.geo.API_KEY" android:value=""/>
+        <meta-data android:name="android.max_aspect" android:value="2.4"/>
+        <activity android:theme="@android:style/Theme.NoTitleBar" android:name="com.shadowcheck.mobile.rebuilt.presentation.MainActivity" android:exported="true" android:configChanges="smallestScreenSize|screenSize|screenLayout|orientation">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <service android:name="com.shadowcheck.mobile.rebuilt.service.CompleteScannerService" android:enabled="true" android:exported="false" android:foregroundServiceType="location"/>
+        <provider android:name="androidx.core.content.FileProvider" android:exported="false" android:authorities="com.shadowcheck.mobile.rebuilt.fileprovider" android:grantUriPermissions="true">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths"/>
+        </provider>
+        <service android:name="androidx.room.MultiInstanceInvalidationService" android:exported="false" android:directBootAware="true"/>
+        <service android:name="androidx.camera.core.impl.MetadataHolderService" android:enabled="false" android:exported="false">
+            <meta-data android:name="androidx.camera.core.impl.MetadataHolderService.DEFAULT_CONFIG_PROVIDER" android:value="androidx.camera.camera2.Camera2Config$DefaultProvider"/>
+        </service>
+        <uses-library android:name="org.apache.http.legacy" android:required="false"/>
+        <activity android:theme="@android:style/Theme.Translucent.NoTitleBar" android:name="com.google.android.gms.common.api.GoogleApiActivity" android:exported="false"/>
+        <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version"/>
+        <provider android:name="androidx.startup.InitializationProvider" android:exported="false" android:authorities="com.shadowcheck.mobile.rebuilt.androidx-startup" tools:replace="android:authorities">
+            <meta-data android:name="androidx.emoji2.text.EmojiCompatInitializer" android:value="androidx.startup"/>
+            <meta-data android:name="com.mapbox.maps.loader.MapboxMapsInitializer" android:value="androidx.startup"/>
+            <meta-data android:name="com.mapbox.common.MapboxSDKCommonInitializer" android:value="androidx.startup"/>
+            <meta-data android:name="androidx.lifecycle.ProcessLifecycleInitializer" android:value="androidx.startup"/>
+            <meta-data android:name="androidx.profileinstaller.ProfileInstallerInitializer" android:value="androidx.startup"/>
+        </provider>
+        <receiver android:name="com.mapbox.common.location.LocationUpdatesReceiver" android:enabled="true" android:exported="false">
+            <intent-filter>
+                <action android:name="com.mapbox.common.location.LocationUpdatesReceiver.ACTION_PROCESS_LOCATION_UPDATES"/>
+            </intent-filter>
+        </receiver>
+        <service android:name="com.mapbox.common.LifecycleService" android:exported="false"/>
+        <receiver android:name="androidx.profileinstaller.ProfileInstallReceiver" android:permission="android.permission.DUMP" android:enabled="true" android:exported="true" android:directBootAware="false">
+            <intent-filter>
+                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="androidx.profileinstaller.action.SKIP_FILE"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION"/>
+            </intent-filter>
+        </receiver>
+        <meta-data android:name="com.google.ar.core.min_apk_version" android:value="242590000"/>
+        <activity android:theme="@android:style/Theme.Material.Light.Dialog.Alert" android:name="com.google.ar.core.InstallActivity" android:exported="false" android:excludeFromRecents="true" android:launchMode="singleTop" android:configChanges="screenSize|orientation|keyboardHidden"/>
+    </application>
+</manifest>

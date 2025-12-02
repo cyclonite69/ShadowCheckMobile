@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Custom attributes for ShadowCheck -->
+    <attr name="shadowCheckPrimary" format="color" />
+    <attr name="shadowCheckSecondary" format="color" />
+    <attr name="shadowCheckBackground" format="color" />
+</resources>
