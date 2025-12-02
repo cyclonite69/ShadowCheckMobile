@@ -1,12 +1,25 @@
 package com.shadowcheck.mobile.presentation.viewmodel
 
 import android.location.Location
+import android.util.Log
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.shadowcheck.mobile.data.*
-import com.shadowcheck.mobile.models.*
+import com.shadowcheck.mobile.domain.model.BluetoothDevice
+import com.shadowcheck.mobile.domain.model.CellularTower
+import com.shadowcheck.mobile.domain.model.WifiNetwork
+import com.shadowcheck.mobile.domain.usecase.GetAllBluetoothDevicesUseCase
+import com.shadowcheck.mobile.domain.usecase.GetAllCellularTowersUseCase
+import com.shadowcheck.mobile.domain.usecase.GetAllWifiNetworksUseCase
+import com.shadowcheck.mobile.domain.usecase.SearchWifiNetworksUseCase
+import com.shadowcheck.mobile.domain.usecase.SyncWiGLEUseCase
+import com.shadowcheck.mobile.models.BluetoothFilters
+import com.shadowcheck.mobile.models.WiFiFilters
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
+import javax.inject.Inject
 
 data class MainUiState(
     val isScanning: Boolean = false,
@@ -37,8 +50,16 @@ data class MainUiState(
     val show3D: Boolean = false
 )
 
-class MainViewModel(private val database: ShadowCheckDatabase) : ViewModel() {
-    
+@HiltViewModel
+class MainViewModel @Inject constructor(
+    private val getAllWifiNetworksUseCase: GetAllWifiNetworksUseCase,
+    private val searchWifiNetworksUseCase: SearchWifiNetworksUseCase,
+    private val syncWiGLEUseCase: SyncWiGLEUseCase,
+    private val getAllBluetoothDevicesUseCase: GetAllBluetoothDevicesUseCase,
+    private val getAllCellularTowersUseCase: GetAllCellularTowersUseCase,
+    private val savedStateHandle: SavedStateHandle
+) : ViewModel() {
+
     private val _uiState = MutableStateFlow(MainUiState())
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
 
@@ -47,19 +68,61 @@ class MainViewModel(private val database: ShadowCheckDatabase) : ViewModel() {
     }
 
     private fun observeNetworks() {
-        viewModelScope.launch {
-            database.wifiNetworkDao().getAllFlow().collect { networks ->
+        getAllWifiNetworksUseCase()
+            .onEach { networks ->
                 _uiState.update { it.copy(wifiNetworks = networks, wifiCount = networks.size) }
             }
-        }
-        viewModelScope.launch {
-            database.bluetoothDeviceDao().getAllFlow().collect { devices ->
+            .catch { e -> Log.e("MainViewModel", "Error observing wifi networks", e) }
+            .launchIn(viewModelScope)
+
+        getAllBluetoothDevicesUseCase()
+            .onEach { devices ->
                 _uiState.update { it.copy(btDevices = devices, btCount = devices.size) }
             }
-        }
-        viewModelScope.launch {
-            database.cellularTowerDao().getAllFlow().collect { towers ->
+            .catch { e -> Log.e("MainViewModel", "Error observing bluetooth devices", e) }
+            .launchIn(viewModelScope)
+
+        getAllCellularTowersUseCase()
+            .onEach { towers ->
                 _uiState.update { it.copy(cellTowers = towers, cellCount = towers.size) }
+            }
+            .catch { e -> Log.e("MainViewModel", "Error observing cellular towers", e) }
+            .launchIn(viewModelScope)
+    }
+    
+    fun onSearchQueryChanged(query: String) {
+        updateSearchQuery(query)
+        if (query.length < 2) {
+            observeNetworks() // a blank query should return all networks
+        } else {
+            searchWifiNetworksUseCase(query)
+                .onEach { networks ->
+                    _uiState.update { it.copy(wifiNetworks = networks, wifiCount = networks.size) }
+                }
+                .catch { e -> Log.e("MainViewModel", "Error searching wifi networks", e) }
+                .launchIn(viewModelScope)
+        }
+    }
+
+    fun syncWithWiGLE(apiKey: String) {
+        viewModelScope.launch {
+            setLoading(true)
+            try {
+                withTimeout(30_000) {
+                    syncWiGLEUseCase(apiKey)
+                        .onSuccess { count ->
+                            // Optionally, we could show a toast with the number of synced networks.
+                            // For now, we just reload the networks.
+                            Log.i("MainViewModel", "Synced $count networks from WiGLE.")
+                        }
+                        .onFailure { error ->
+                            Log.e("MainViewModel", "Failed to sync with WiGLE", error)
+                        }
+                }
+            } catch (e: Exception) {
+                Log.e("MainViewModel", "Sync timed out or failed", e)
+            } finally {
+                setLoading(false)
             }
         }
     }
@@ -88,7 +151,7 @@ class MainViewModel(private val database: ShadowCheckDatabase) : ViewModel() {
     }
     fun selectAllWiFi() = _uiState.update { it.copy(selectedWifiNetworks = it.wifiNetworks.map { n -> n.bssid }.toSet()) }
     fun deselectAllWiFi() = _uiState.update { it.copy(selectedWifiNetworks = emptySet()) }
-    fun selectAllBt() = _uiState.update { it.copy(selectedBtDevices = it.btDevices.map { d -> d.address }.toSet()) }
+    fun selectAllBt() = _uiState.update { it.copy(selectedBtDevices = it.btDevices.map { d -> d.macAddress }.toSet()) }
     fun deselectAllBt() = _uiState.update { it.copy(selectedBtDevices = emptySet()) }
     fun setLoading(loading: Boolean) = _uiState.update { it.copy(isLoading = loading) }
 }
