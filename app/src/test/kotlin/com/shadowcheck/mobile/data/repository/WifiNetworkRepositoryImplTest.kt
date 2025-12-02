@@ -16,12 +16,14 @@ import io.mockk.junit4.MockKRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import retrofit2.Response
+import kotlin.time.Duration.Companion.seconds
 
 @ExperimentalCoroutinesApi
 class WifiNetworkRepositoryImplTest {
@@ -35,7 +37,7 @@ class WifiNetworkRepositoryImplTest {
     @MockK
     private lateinit var wigleService: WiGLEApiService
     
-    @InjectMockKs(overrideValues = true)
+    // @InjectMockKs(overrideValues = true)
     private lateinit var repository: WifiNetworkRepositoryImpl
     
     // Test data
@@ -51,7 +53,7 @@ class WifiNetworkRepositoryImplTest {
     }
 
     @Test
-    fun `getAllNetworks should return networks from DAO`() = runTest {
+    fun `getAllNetworks should return networks from DAO`() = runTest(timeout = 10.seconds) {
         // Given
         every { wifiDao.getAllNetworks() } returns flowOf(networkEntities)
 
@@ -64,7 +66,7 @@ class WifiNetworkRepositoryImplTest {
     }
 
     @Test
-    fun `insertNetwork should call DAO and return result`() = runTest {
+    fun `insertNetwork should call DAO and return result`() = runTest(timeout = 10.seconds) {
         // Given
         coEvery { wifiDao.insertNetwork(any()) } returns 1L
 
@@ -77,7 +79,7 @@ class WifiNetworkRepositoryImplTest {
     }
 
     @Test
-    fun `searchNetworks should return filtered data from DAO`() = runTest {
+    fun `searchNetworks should return filtered data from DAO`() = runTest(timeout = 10.seconds) {
         // Given
         every { wifiDao.searchNetworks(any()) } returns flowOf(listOf(networkEntity1))
 
@@ -90,7 +92,7 @@ class WifiNetworkRepositoryImplTest {
     }
     
     @Test
-    fun `syncWithWiGLE should call service and insert results`() = runTest {
+    fun `syncWithWiGLE should call service and insert results`() = runTest(timeout = 10.seconds) {
         // Given
         val dto = WigleNetworkDto(0.0, 0.0, "ssid_from_wigle", "bssid_from_wigle", 1, "WPA3", "", -55)
         val response = WigleWifiSearchResponse(true, listOf(dto))

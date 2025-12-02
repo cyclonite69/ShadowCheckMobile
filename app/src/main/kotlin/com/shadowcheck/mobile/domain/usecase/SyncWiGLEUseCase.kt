@@ -3,12 +3,14 @@ package com.shadowcheck.mobile.domain.usecase
 import com.shadowcheck.mobile.data.repository.WifiNetworkRepositoryImpl
 import com.shadowcheck.mobile.domain.repository.WifiNetworkRepository
 import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Use case to synchronize Wi-Fi data with the WiGLE service.
  *
  * @property wifiNetworkRepository The repository to perform the sync operation.
  */
+@Singleton
 class SyncWiGLEUseCase @Inject constructor(
     private val wifiNetworkRepository: WifiNetworkRepository
 ) {
@@ -21,12 +23,8 @@ class SyncWiGLEUseCase @Inject constructor(
             return Result.failure(IllegalArgumentException("API key cannot be blank."))
         }
         return try {
-            // The repository implementation handles the actual API call and returns Unit.
-            // We'll assume for now that if it doesn't throw, it's a success.
-            // A more robust implementation would have the repository return the count.
-            // For now, we'll return a placeholder count.
-            (wifiNetworkRepository as WifiNetworkRepositoryImpl).syncWithWiGLE(apiKey)
-            Result.success(0) // Placeholder
+            val syncedCount = wifiNetworkRepository.syncWithWiGLE(apiKey)
+            Result.success(syncedCount)
         } catch (e: Exception) {
             Result.failure(e)
         }

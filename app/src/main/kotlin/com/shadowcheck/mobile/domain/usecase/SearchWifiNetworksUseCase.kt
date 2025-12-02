@@ -6,12 +6,14 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Use case to search for Wi-Fi networks based on a query.
  *
  * @property wifiNetworkRepository The repository to search for Wi-Fi networks.
  */
+@Singleton
 class SearchWifiNetworksUseCase @Inject constructor(
     private val wifiNetworkRepository: WifiNetworkRepository
 ) {

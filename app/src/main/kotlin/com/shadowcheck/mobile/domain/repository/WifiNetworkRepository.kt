@@ -25,5 +25,5 @@ interface WifiNetworkRepository {
      *
      * @param apiKey The API key for authenticating with the WiGLE.net service.
      */
-    suspend fun syncWithWiGLE(apiKey: String)
+    suspend fun syncWithWiGLE(apiKey: String): Int
 }

@@ -9,6 +9,7 @@ import io.mockk.junit4.MockKRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -48,7 +49,7 @@ class SearchWifiNetworksUseCaseTest {
     @Test
     fun `invoke with blank query should return empty flow`() = runTest {
         // When
-        val result = useCase("").first()
+        val result = useCase("").toList()
 
         // Then
         assertTrue(result.isEmpty())
@@ -57,7 +58,7 @@ class SearchWifiNetworksUseCaseTest {
     @Test
     fun `invoke with short query should return empty flow`() = runTest {
         // When
-        val result = useCase("a").first()
+        val result = useCase("a").toList()
 
         // Then
         assertTrue(result.isEmpty())

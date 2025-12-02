@@ -60,13 +60,14 @@ class WifiNetworkRepositoryImpl @Inject constructor(
         }.flowOn(dispatcher)
     }
 
-    override suspend fun syncWithWiGLE(apiKey: String) = withContext(dispatcher) {
+    override suspend fun syncWithWiGLE(apiKey: String): Int = withContext(dispatcher) {
         try {
             val response = wigleService.searchNetworks(apiKey = "Basic $apiKey")
             if (response.isSuccessful) {
                 response.body()?.results?.let { dtos ->
                     val entities = dtos.map { it.toEntity() }
                     wifiDao.insertAll(entities)
+                    return@withContext entities.size
                 }
             } else {
                 Log.e("WifiNetworkRepo", "WiGLE API Error: ${response.code()} ${response.message()}")
@@ -75,5 +76,6 @@ class WifiNetworkRepositoryImpl @Inject constructor(
             Log.e("WifiNetworkRepo", "Failed to sync with WiGLE", e)
             // Do not propagate network errors for this operation
         }
+        return@withContext 0
     }
 }

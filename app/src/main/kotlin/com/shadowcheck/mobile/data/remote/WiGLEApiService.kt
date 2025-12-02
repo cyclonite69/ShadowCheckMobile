@@ -1,4 +1,4 @@
-package com.shadowcheck.mobile.data.remote.service
+package com.shadowcheck.mobile.data.remote
 
 import com.shadowcheck.mobile.data.remote.dto.WigleWifiSearchResponse
 import retrofit2.Response
@@ -12,6 +12,6 @@ interface WiGLEApiService {
         @Header("Authorization") apiKey: String,
         @Query("onlymine") onlymine: Boolean = true,
         @Query("freenet") freenet: Boolean = false,
-        @Query.Query("paynet") paynet: Boolean = false
+        @Query("paynet") paynet: Boolean = false
     ): Response<WigleWifiSearchResponse>
 }

@@ -1,11 +1,11 @@
-package com.shadowcheck.mobile.ui.viewmodel
+package com.shadowcheck.mobile.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.shadowcheck.mobile.domain.model.WifiNetwork
-import com.shadowcheck.mobile.domain.usecase.wifi.GetAllWifiNetworksUseCase
-import com.shadowcheck.mobile.domain.usecase.wifi.SearchWifiNetworksUseCase
-import com.shadowcheck.mobile.domain.usecase.wifi.SyncWigleDataUseCase
+import com.shadowcheck.mobile.domain.usecase.GetAllWifiNetworksUseCase
+import com.shadowcheck.mobile.domain.usecase.SearchWifiNetworksUseCase
+import com.shadowcheck.mobile.domain.usecase.SyncWiGLEUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,7 +19,7 @@ import javax.inject.Inject
 class WifiViewModel @Inject constructor(
     private val getAllWifiNetworksUseCase: GetAllWifiNetworksUseCase,
     private val searchWifiNetworksUseCase: SearchWifiNetworksUseCase,
-    private val syncWigleDataUseCase: SyncWigleDataUseCase
+    private val syncWiGLEUseCase: SyncWiGLEUseCase
 ) : ViewModel() {
 
     private val _networks = MutableStateFlow<List<WifiNetwork>>(emptyList())
@@ -55,7 +55,7 @@ class WifiViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                syncWigleDataUseCase(apiKey)
+                syncWiGLEUseCase(apiKey)
                 // Refresh data after sync
                 loadNetworks()
             } catch (e: Exception) {
