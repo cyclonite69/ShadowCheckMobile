@@ -1,9 +1,11 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("com.google.devtools.ksp")
+    id("org.jetbrains.kotlin.plugin.compose")
     id("kotlin-parcelize")
     id("org.jetbrains.kotlin.plugin.serialization")
+    id("com.google.dagger.hilt.android")
+    id("kotlin-kapt")
 }
 
 android {
@@ -11,11 +13,11 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.shadowcheck.mobile.rebuilt"
+        applicationId = "com.shadowcheck.mobile.rebuildv2"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
-        versionName = "1.0"
+        versionName = "2.0-rebuild"
     }
 
     buildTypes {
@@ -33,8 +35,7 @@ android {
     kotlinOptions {
         jvmTarget = "17"
         freeCompilerArgs += listOf(
-            "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
-            "-opt-in=kotlin.RequiresOptIn"
+            "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api"
         )
     }
 
@@ -42,9 +43,8 @@ android {
         compose = true
     }
 
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.8"
-    }
+    // Compose Compiler is now built into Kotlin 2.0+
+    // No need to specify kotlinCompilerExtensionVersion
 
     packaging {
         resources {
@@ -53,6 +53,15 @@ android {
         jniLibs {
             useLegacyPackaging = false
         }
+    }
+
+    lint {
+        abortOnError = false
+    }
+    
+    // Kapt block as requested inside android closure
+    kapt {
+        correctErrorTypes = true
     }
 }
 
@@ -78,7 +87,7 @@ dependencies {
     val roomVersion = "2.6.1"
     implementation("androidx.room:room-runtime:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
-    ksp("androidx.room:room-compiler:$roomVersion")
+    kapt("androidx.room:room-compiler:$roomVersion")
 
     // Networking
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
@@ -115,4 +124,18 @@ dependencies {
     implementation("androidx.camera:camera-camera2:$cameraxVersion")
     implementation("androidx.camera:camera-lifecycle:$cameraxVersion")
     implementation("androidx.camera:camera-view:$cameraxVersion")
+
+    // Hilt
+    implementation("com.google.dagger:hilt-android:2.48")
+    kapt("com.google.dagger:hilt-compiler:2.48") // Change ksp to kapt
+
+    // Hilt Compose
+    implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
+
+    // Testing
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    testImplementation("io.mockk:mockk:1.13.8")
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("androidx.test.ext:junit:1.1.5")
+    testImplementation("androidx.test.espresso:espresso-core:3.5.1")
 }

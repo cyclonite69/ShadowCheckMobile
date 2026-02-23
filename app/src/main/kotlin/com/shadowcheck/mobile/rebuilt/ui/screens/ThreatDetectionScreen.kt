@@ -11,41 +11,22 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.room.Room
-import com.shadowcheck.mobile.data.ShadowCheckDatabase
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.shadowcheck.mobile.presentation.viewmodel.ThreatDetectionViewModel
 import com.shadowcheck.mobile.rebuilt.presentation.theme.ShadowCheckColors
-import kotlinx.coroutines.delay
-
-data class Threat(
-    val id: String,
-    val type: String, // "Rogue AP", "Evil Twin", "Deauth Attack", "Unusual Signal", "Hidden Network", "Suspicious BT"
-    val severity: String, // "Critical", "High", "Medium", "Low"
-    val title: String,
-    val description: String,
-    val timestamp: Long,
-    val bssid: String = "",
-    val signalStrength: Int = 0
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ThreatDetectionScreen(onBack: () -> Unit = {}) {
-    val context = LocalContext.current
-    var threats by remember { mutableStateOf<List<Threat>>(emptyList()) }
-    var isScanning by remember { mutableStateOf(false) }
-    
-    LaunchedEffect(Unit) {
-        while (true) {
-            if (isScanning) {
-                threats = detectThreats(context)
-            }
-            delay(5000)
-        }
-    }
+fun ThreatDetectionScreen(
+    viewModel: ThreatDetectionViewModel = hiltViewModel(),
+    onBack: () -> Unit = {}
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    val threats = uiState.threats
+    val isScanning = uiState.isScanning
     
     Column(modifier = Modifier.fillMaxSize().background(ShadowCheckColors.Background)) {
         TopAppBar(
@@ -56,7 +37,7 @@ fun ThreatDetectionScreen(onBack: () -> Unit = {}) {
                 }
             },
             actions = {
-                IconButton(onClick = { isScanning = !isScanning }) {
+                IconButton(onClick = { viewModel.toggleScanning() }) {
                     Icon(
                         if (isScanning) Icons.Default.Stop else Icons.Default.PlayArrow,
                         if (isScanning) "Stop" else "Start",
@@ -172,69 +153,3 @@ fun ThreatCard(threat: Threat) {
     }
 }
 
-suspend fun detectThreats(context: android.content.Context): List<Threat> {
-    val db = Room.databaseBuilder(context, ShadowCheckDatabase::class.java, "shadowcheck.db").build()
-    val threats = mutableListOf<Threat>()
-    
-    // Get recent networks
-    val wifiNetworks = db.wifiNetworkDao().getDistinctFlow()
-    
-    wifiNetworks.collect { networks ->
-        // Detect hidden networks
-        networks.filter { it.ssid.isBlank() }.forEach { network ->
-            threats.add(Threat(
-                id = network.bssid,
-                type = "Hidden Network",
-                severity = "Medium",
-                title = "Hidden SSID Detected",
-                description = "Network broadcasting without SSID - potential surveillance",
-                timestamp = network.timestamp,
-                bssid = network.bssid,
-                signalStrength = network.signalLevel
-            ))
-        }
-        
-        // Detect unusually strong signals (potential rogue AP nearby)
-        networks.filter { it.signalLevel > -30 }.forEach { network ->
-            threats.add(Threat(
-                id = "${network.bssid}_strong",
-                type = "Unusual Signal",
-                severity = "High",
-                title = "Unusually Strong Signal",
-                description = "Signal strength ${network.signalLevel}dBm - device may be very close",
-                timestamp = network.timestamp,
-                bssid = network.bssid,
-                signalStrength = network.signalLevel
-            ))
-        }
-        
-        // Detect potential evil twins (same SSID, different BSSID)
-        val ssidGroups = networks.filter { it.ssid.isNotBlank() }.groupBy { it.ssid }
-        ssidGroups.filter { it.value.size > 1 }.forEach { (ssid, nets) ->
-            threats.add(Threat(
-                id = "${ssid}_twin",
-                type = "Evil Twin",
-                severity = "Critical",
-                title = "Potential Evil Twin",
-                description = "Multiple APs with SSID '$ssid' detected - ${nets.size} BSSIDs",
-                timestamp = System.currentTimeMillis(),
-                bssid = nets.first().bssid
-            ))
-        }
-        
-        // Detect open networks (no encryption)
-        networks.filter { !it.capabilities.contains("WPA") && !it.capabilities.contains("WEP") }.forEach { network ->
-            threats.add(Threat(
-                id = "${network.bssid}_open",
-                type = "Rogue AP",
-                severity = "High",
-                title = "Open Network Detected",
-                description = "${network.ssid} has no encryption - potential honeypot",
-                timestamp = network.timestamp,
-                bssid = network.bssid
-            ))
-        }
-    }
-    
-    return threats.distinctBy { it.id }.sortedByDescending { it.severity }
-}

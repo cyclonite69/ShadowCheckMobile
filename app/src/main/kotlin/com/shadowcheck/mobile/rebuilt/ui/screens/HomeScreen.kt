@@ -1,7 +1,6 @@
 package com.shadowcheck.mobile.rebuilt.ui.screens
 
 import android.Manifest
-import kotlinx.coroutines.delay
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -16,34 +15,31 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import com.shadowcheck.mobile.ui.components.rainbowShimmer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.shadowcheck.mobile.presentation.viewmodel.HomeViewModel
 import com.shadowcheck.mobile.rebuilt.presentation.theme.ShadowCheckColors
-import com.shadowcheck.mobile.rebuilt.service.ScannerService
+import com.shadowcheck.mobile.ui.components.rainbowShimmer
 
 @Composable
-fun HomeScreen(onNavigate: (String) -> Unit = {}) {
+fun HomeScreen(
+    viewModel: HomeViewModel = hiltViewModel(),
+    onNavigate: (String) -> Unit = {}
+) {
     val context = LocalContext.current
+    val uiState by viewModel.uiState.collectAsState()
     var hasPermissions by remember { mutableStateOf(false) }
-    var wifiUnique by remember { mutableStateOf(0) }
-    var wifiTotal by remember { mutableStateOf(0) }
-    var btUnique by remember { mutableStateOf(0) }
-    var btTotal by remember { mutableStateOf(0) }
-    var cellUnique by remember { mutableStateOf(0) }
-    var cellTotal by remember { mutableStateOf(0) }
-    var isActuallyScanning by remember { mutableStateOf(false) }
     
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         hasPermissions = permissions.values.all { it }
-        if (hasPermissions) startScanner(context)
+        if (hasPermissions) startScanner(context, viewModel)
     }
     
     LaunchedEffect(Unit) {
@@ -57,23 +53,7 @@ fun HomeScreen(onNavigate: (String) -> Unit = {}) {
             ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
         }
         if (hasPermissions) {
-            startScanner(context)
-            delay(1000)
-            while (true) {
-                val wifiManager = context.getSystemService(Context.WIFI_SERVICE) as android.net.wifi.WifiManager
-                isActuallyScanning = wifiManager.isWifiEnabled
-                
-                // Get counts from database
-                val db = androidx.room.Room.databaseBuilder(context, com.shadowcheck.mobile.data.ShadowCheckDatabase::class.java, "shadowcheck.db").build()
-                wifiUnique = db.wifiNetworkDao().getUniqueCount()
-                wifiTotal = db.wifiNetworkDao().getTotalCount()
-                btUnique = db.bleDeviceDao().getUniqueCount()
-                btTotal = db.bleDeviceDao().getTotalCount()
-                cellUnique = db.cellularTowerDao().getUniqueCount()
-                cellTotal = db.cellularTowerDao().getTotalCount()
-                
-                delay(3000)
-            }
+            startScanner(context, viewModel)
         } else {
             permissionLauncher.launch(permissions)
         }
@@ -105,14 +85,14 @@ fun HomeScreen(onNavigate: (String) -> Unit = {}) {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = if (isActuallyScanning) "SCANNING ACTIVE" else "SCANNING STOPPED",
-                        color = if (isActuallyScanning) ShadowCheckColors.Accent else ShadowCheckColors.Error,
+                        text = if (uiState.isScanning) "SCANNING ACTIVE" else "SCANNING STOPPED",
+                        color = if (uiState.isScanning) ShadowCheckColors.Accent else ShadowCheckColors.Error,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = if (isActuallyScanning) "Collecting network data..." else "Scanner not active",
+                        text = if (uiState.isScanning) "Collecting network data..." else "Scanner not active",
                         color = ShadowCheckColors.TextSecondary,
                         fontSize = 14.sp
                     )
@@ -125,9 +105,9 @@ fun HomeScreen(onNavigate: (String) -> Unit = {}) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                StatCard(Icons.Default.Wifi, wifiUnique, wifiTotal, "WiFi") { onNavigate("wifi_list") }
-                StatCard(Icons.Default.Bluetooth, btUnique, btTotal, "Bluetooth") { onNavigate("bluetooth_list") }
-                StatCard(Icons.Default.CellTower, cellUnique, cellTotal, "Cellular") { onNavigate("cellular_list") }
+                StatCard(Icons.Default.Wifi, uiState.wifiUnique, uiState.wifiTotal, "WiFi") { onNavigate("wifi_list") }
+                StatCard(Icons.Default.Bluetooth, uiState.btUnique, uiState.btTotal, "Bluetooth") { onNavigate("bluetooth_list") }
+                StatCard(Icons.Default.CellTower, uiState.cellUnique, uiState.cellTotal, "Cellular") { onNavigate("cellular_list") }
             }
         }
         
@@ -164,10 +144,11 @@ fun StatCard(icon: androidx.compose.ui.graphics.vector.ImageVector, unique: Int,
     }
 }
 
-private fun startScanner(context: Context) {
+private fun startScanner(context: Context, viewModel: HomeViewModel) {
     try {
         context.startForegroundService(Intent(context, com.shadowcheck.mobile.rebuilt.service.CompleteScannerService::class.java).apply {
             action = "START"
         })
+        viewModel.setScanning(true)
     } catch (e: Exception) {}
 }
