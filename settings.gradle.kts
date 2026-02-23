@@ -17,3 +17,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "ShadowCheckMobile"
 include(":app")
+include(":core")
+include(":domain")
+include(":data")

@@ -12,32 +12,23 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.room.Room
-import com.shadowcheck.mobile.data.ShadowCheckDatabase
-import com.shadowcheck.mobile.data.WifiNetwork
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.shadowcheck.mobile.presentation.viewmodel.WifiListViewModel
 import com.shadowcheck.mobile.rebuilt.presentation.theme.ShadowCheckColors
-import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WiFiListScreen(onBack: () -> Unit = {}, onNetworkClick: (String) -> Unit = {}) {
-    val context = LocalContext.current
-    var networks by remember { mutableStateOf<List<WifiNetwork>>(emptyList()) }
-    var distinctCount by remember { mutableStateOf(0) }
-    var sightingsCounts by remember { mutableStateOf<Map<String, Int>>(emptyMap()) }
-    
-    LaunchedEffect(Unit) {
-        val db = Room.databaseBuilder(context, ShadowCheckDatabase::class.java, "shadowcheck.db").build()
-        db.wifiNetworkDao().getDistinctFlow().collect { list ->
-            networks = list
-            distinctCount = db.wifiNetworkDao().getUniqueCount()
-            sightingsCounts = list.associate { it.bssid to db.wifiNetworkDao().getSightingsCount(it.bssid) }
-        }
-    }
+fun WiFiListScreen(
+    viewModel: WifiListViewModel = hiltViewModel(),
+    onBack: () -> Unit = {},
+    onNetworkClick: (String) -> Unit = {}
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    val networks = uiState.networks
+    val distinctCount = uiState.distinctCount
     
     Column(modifier = Modifier.fillMaxSize().background(ShadowCheckColors.Background)) {
         TopAppBar(

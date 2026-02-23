@@ -13,35 +13,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.room.Room
-import com.shadowcheck.mobile.data.ShadowCheckDatabase
-import com.shadowcheck.mobile.data.WifiNetwork
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.shadowcheck.mobile.presentation.viewmodel.NetworkDetailViewModel
 import com.shadowcheck.mobile.rebuilt.presentation.theme.ShadowCheckColors
 import java.text.SimpleDateFormat
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NetworkDetailScreen(bssid: String, onBack: () -> Unit = {}) {
-    val context = LocalContext.current
-    var sightings by remember { mutableStateOf<List<WifiNetwork>>(emptyList()) }
-    var network by remember { mutableStateOf<WifiNetwork?>(null) }
-    
-    LaunchedEffect(bssid) {
-        val db = Room.databaseBuilder(context, ShadowCheckDatabase::class.java, "shadowcheck.db").build()
-        db.wifiNetworkDao().getSightingsByBssid(bssid).collect { list ->
-            sightings = list.sortedBy { it.timestamp }
-            network = list.firstOrNull()
-        }
-    }
-    
-    val avgSignal = if (sightings.isNotEmpty()) sightings.map { it.signalLevel }.average().toInt() else 0
-    val minSignal = sightings.minOfOrNull { it.signalLevel } ?: 0
-    val maxSignal = sightings.maxOfOrNull { it.signalLevel } ?: 0
+fun NetworkDetailScreen(
+    bssid: String,
+    viewModel: NetworkDetailViewModel = hiltViewModel(),
+    onBack: () -> Unit = {}
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    val network = uiState.network
+    val sightings = uiState.sightings
     
     Column(modifier = Modifier.fillMaxSize().background(ShadowCheckColors.Background).verticalScroll(rememberScrollState())) {
         TopAppBar(

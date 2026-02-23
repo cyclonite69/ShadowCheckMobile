@@ -1,0 +1,49 @@
+## This file is a template for local.properties
+## Copy this file to local.properties and fill in your actual values
+## local.properties is gitignored and should never be committed
+
+## Android SDK location
+## This is typically auto-configured by Android Studio
+## Uncomment and set if needed
+# sdk.dir=/path/to/Android/sdk
+
+## JDK Configuration
+## IMPORTANT: This project requires JDK 17 (not JDK 21 or other versions)
+## Only set this if Gradle is not detecting JDK 17 correctly
+## See docs/JDK_CONFIGURATION.md for detailed setup instructions
+# org.gradle.java.home=/usr/lib/jvm/java-17-openjdk
+
+## API Keys
+## These keys are required for full app functionality
+
+## Mapbox Access Token
+## Get your token from: https://account.mapbox.com/access-tokens/
+# MAPBOX_ACCESS_TOKEN=your_mapbox_token_here
+
+## Google Maps API Key
+## Get your key from: https://console.cloud.google.com/google/maps-apis/
+# GOOGLE_MAPS_API_KEY=your_google_maps_key_here
+
+## WiGLE API Credentials
+## Get your credentials from: https://wigle.net/account
+## Note: WiGLE API keys are stored encrypted in the app via SecureApiKeyManager
+## These are optional for development builds
+# WIGLE_API_NAME=your_wigle_username
+# WIGLE_API_TOKEN=your_wigle_api_token
+
+## Build Configuration
+## JDK location (if not using JAVA_HOME)
+# org.gradle.java.home=/path/to/jdk-17
+
+## Gradle JVM arguments (increase heap if needed)
+# org.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=512m
+
+## Gradle daemon configuration
+# org.gradle.daemon=true
+# org.gradle.parallel=true
+# org.gradle.caching=true
+
+## Kotlin compiler options
+# kotlin.incremental=true
+# kotlin.incremental.java=true
+# kotlin.caching.enabled=true

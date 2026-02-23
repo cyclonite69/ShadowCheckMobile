@@ -121,3 +121,4 @@ screenshots/
 *.bak
 *.swp
 *~.nib
+.claude/
