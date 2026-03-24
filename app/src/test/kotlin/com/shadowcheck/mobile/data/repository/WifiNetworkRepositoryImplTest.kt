@@ -2,6 +2,7 @@ package com.shadowcheck.mobile.wifi.data.repository
 
 import com.shadowcheck.mobile.wifi.data.local.dao.WifiNetworkDao
 import com.shadowcheck.mobile.wifi.data.local.entity.WifiNetworkEntity
+import com.shadowcheck.mobile.wifi.data.local.entity.toModel
 import com.shadowcheck.mobile.wifi.data.remote.WiGLEApiService
 import com.shadowcheck.mobile.wifi.data.remote.dto.WigleNetworkDto
 import com.shadowcheck.mobile.wifi.data.remote.dto.WigleWifiSearchResponse

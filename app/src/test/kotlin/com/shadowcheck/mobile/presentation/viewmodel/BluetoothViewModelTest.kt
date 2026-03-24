@@ -50,8 +50,20 @@ class BluetoothViewModelTest {
     fun `init should load all devices`() = runTest {
         // Given
         val devices = listOf(
-            BluetoothDevice("Device1", "AA:BB:CC:DD:EE:01", "Classic", -70, 1000L),
-            BluetoothDevice("Device2", "AA:BB:CC:DD:EE:02", "BLE", -50, 2000L)
+            BluetoothDevice(
+                macAddress = "AA:BB:CC:DD:EE:01",
+                name = "Device1",
+                type = 1,
+                rssi = -70,
+                timestamp = 1000L
+            ),
+            BluetoothDevice(
+                macAddress = "AA:BB:CC:DD:EE:02",
+                name = "Device2",
+                type = 2,
+                rssi = -50,
+                timestamp = 2000L
+            )
         )
         every { getAllBluetoothDevices() } returns flowOf(devices)
 
@@ -68,7 +80,13 @@ class BluetoothViewModelTest {
     fun `loadAllDevices should refresh device list`() = runTest {
         // Given
         val devices = listOf(
-            BluetoothDevice("Device1", "AA:BB:CC:DD:EE:01", "Classic", -70, 1000L)
+            BluetoothDevice(
+                macAddress = "AA:BB:CC:DD:EE:01",
+                name = "Device1",
+                type = 1,
+                rssi = -70,
+                timestamp = 1000L
+            )
         )
         every { getAllBluetoothDevices() } returns flowOf(devices)
 
@@ -87,10 +105,22 @@ class BluetoothViewModelTest {
     fun `findNearbyDevices should update devices with nearby results`() = runTest {
         // Given
         val allDevices = listOf(
-            BluetoothDevice("Device1", "AA:BB:CC:DD:EE:01", "Classic", -70, 1000L)
+            BluetoothDevice(
+                macAddress = "AA:BB:CC:DD:EE:01",
+                name = "Device1",
+                type = 1,
+                rssi = -70,
+                timestamp = 1000L
+            )
         )
         val nearbyDevices = listOf(
-            BluetoothDevice("NearbyDevice", "AA:BB:CC:DD:EE:02", "BLE", -50, 2000L)
+            BluetoothDevice(
+                macAddress = "AA:BB:CC:DD:EE:02",
+                name = "NearbyDevice",
+                type = 2,
+                rssi = -50,
+                timestamp = 2000L
+            )
         )
         every { getAllBluetoothDevices() } returns flowOf(allDevices)
         every { getNearbyBluetoothDevices(-70) } returns flowOf(nearbyDevices)
@@ -112,7 +142,13 @@ class BluetoothViewModelTest {
         // Given
         val allDevices = emptyList<BluetoothDevice>()
         val nearbyDevices = listOf(
-            BluetoothDevice("NearbyDevice", "AA:BB:CC:DD:EE:01", "BLE", -60, 1000L)
+            BluetoothDevice(
+                macAddress = "AA:BB:CC:DD:EE:01",
+                name = "NearbyDevice",
+                type = 2,
+                rssi = -60,
+                timestamp = 1000L
+            )
         )
         every { getAllBluetoothDevices() } returns flowOf(allDevices)
         every { getNearbyBluetoothDevices(-70) } returns flowOf(nearbyDevices)

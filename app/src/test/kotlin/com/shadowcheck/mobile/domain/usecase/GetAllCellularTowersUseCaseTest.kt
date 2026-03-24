@@ -31,9 +31,36 @@ class GetAllCellularTowersUseCaseTest {
     fun `invoke should return all cellular towers`() = runTest {
         // Given
         val towers = listOf(
-            CellularTower("LTE", 310, 260, 12345, 1, 40.7128, -74.0060, -85, 1000L),
-            CellularTower("5G", 310, 260, 12346, 2, 40.7138, -74.0070, -75, 2000L),
-            CellularTower("LTE", 310, 410, 12347, 3, 40.7148, -74.0080, -90, 3000L)
+            CellularTower(
+                cellId = 12345,
+                lac = 1,
+                mcc = 310,
+                mnc = 260,
+                signalStrength = -85,
+                latitude = 40.7128,
+                longitude = -74.0060,
+                timestamp = 1000L
+            ),
+            CellularTower(
+                cellId = 12346,
+                lac = 2,
+                mcc = 310,
+                mnc = 260,
+                signalStrength = -75,
+                latitude = 40.7138,
+                longitude = -74.0070,
+                timestamp = 2000L
+            ),
+            CellularTower(
+                cellId = 12347,
+                lac = 3,
+                mcc = 310,
+                mnc = 410,
+                signalStrength = -90,
+                latitude = 40.7148,
+                longitude = -74.0080,
+                timestamp = 3000L
+            )
         )
         every { repository.getAllTowers() } returns flowOf(towers)
 

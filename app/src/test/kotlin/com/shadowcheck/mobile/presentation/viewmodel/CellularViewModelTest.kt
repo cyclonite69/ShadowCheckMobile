@@ -50,8 +50,26 @@ class CellularViewModelTest {
     fun `init should load all towers`() = runTest {
         // Given
         val towers = listOf(
-            CellularTower("LTE", 310, 260, 12345, 1, 40.7128, -74.0060, -85, 1000L),
-            CellularTower("5G", 310, 260, 12346, 2, 40.7138, -74.0070, -75, 2000L)
+            CellularTower(
+                cellId = 12345,
+                lac = 1,
+                mcc = 310,
+                mnc = 260,
+                signalStrength = -85,
+                latitude = 40.7128,
+                longitude = -74.0060,
+                timestamp = 1000L
+            ),
+            CellularTower(
+                cellId = 12346,
+                lac = 2,
+                mcc = 310,
+                mnc = 260,
+                signalStrength = -75,
+                latitude = 40.7138,
+                longitude = -74.0070,
+                timestamp = 2000L
+            )
         )
         every { getAllCellularTowers() } returns flowOf(towers)
 
@@ -61,14 +79,23 @@ class CellularViewModelTest {
 
         // Then
         assertEquals(2, viewModel.towers.value.size)
-        assertEquals("LTE", viewModel.towers.value[0].type)
+        assertEquals(12345, viewModel.towers.value[0].cellId)
     }
 
     @Test
     fun `loadAllTowers should refresh tower list`() = runTest {
         // Given
         val towers = listOf(
-            CellularTower("5G", 310, 260, 12345, 1, 40.7128, -74.0060, -85, 1000L)
+            CellularTower(
+                cellId = 12345,
+                lac = 1,
+                mcc = 310,
+                mnc = 260,
+                signalStrength = -85,
+                latitude = 40.7128,
+                longitude = -74.0060,
+                timestamp = 1000L
+            )
         )
         every { getAllCellularTowers() } returns flowOf(towers)
 
@@ -87,10 +114,28 @@ class CellularViewModelTest {
     fun `findNearbyTowers should update towers with location-based results`() = runTest {
         // Given
         val allTowers = listOf(
-            CellularTower("LTE", 310, 260, 12345, 1, 40.7128, -74.0060, -85, 1000L)
+            CellularTower(
+                cellId = 12345,
+                lac = 1,
+                mcc = 310,
+                mnc = 260,
+                signalStrength = -85,
+                latitude = 40.7128,
+                longitude = -74.0060,
+                timestamp = 1000L
+            )
         )
         val nearbyTowers = listOf(
-            CellularTower("5G", 310, 260, 12346, 2, 40.7138, -74.0070, -75, 2000L)
+            CellularTower(
+                cellId = 12346,
+                lac = 2,
+                mcc = 310,
+                mnc = 260,
+                signalStrength = -75,
+                latitude = 40.7138,
+                longitude = -74.0070,
+                timestamp = 2000L
+            )
         )
         every { getAllCellularTowers() } returns flowOf(allTowers)
         every { getTowersByLocation(40.7128, -74.0060, 1000.0) } returns flowOf(nearbyTowers)
@@ -99,12 +144,12 @@ class CellularViewModelTest {
         advanceUntilIdle()
 
         // When
-        viewModel.findNearbyTowers(40.7128, -74.0060, 1000.0)
+        viewModel.findTowersNearby(40.7128, -74.0060, 1000.0)
         advanceUntilIdle()
 
         // Then
         assertEquals(1, viewModel.towers.value.size)
-        assertEquals("5G", viewModel.towers.value[0].type)
+        assertEquals(12346, viewModel.towers.value[0].cellId)
     }
 
     @Test
@@ -112,7 +157,16 @@ class CellularViewModelTest {
         // Given
         val allTowers = emptyList<CellularTower>()
         val nearbyTowers = listOf(
-            CellularTower("LTE", 310, 260, 12345, 1, 40.7128, -74.0060, -85, 1000L)
+            CellularTower(
+                cellId = 12345,
+                lac = 1,
+                mcc = 310,
+                mnc = 260,
+                signalStrength = -85,
+                latitude = 40.7128,
+                longitude = -74.0060,
+                timestamp = 1000L
+            )
         )
         every { getAllCellularTowers() } returns flowOf(allTowers)
         every { getTowersByLocation(40.7128, -74.0060, 5000.0) } returns flowOf(nearbyTowers)
@@ -121,7 +175,7 @@ class CellularViewModelTest {
         advanceUntilIdle()
 
         // When
-        viewModel.findNearbyTowers(40.7128, -74.0060)
+        viewModel.findTowersNearby(40.7128, -74.0060, 5000.0)
         advanceUntilIdle()
 
         // Then

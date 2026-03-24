@@ -31,9 +31,27 @@ class GetAllBluetoothDevicesUseCaseTest {
     fun `invoke should return all bluetooth devices`() = runTest {
         // Given
         val devices = listOf(
-            BluetoothDevice("Device1", "AA:BB:CC:DD:EE:01", "Classic", -70, 1000L),
-            BluetoothDevice("Device2", "AA:BB:CC:DD:EE:02", "BLE", -50, 2000L),
-            BluetoothDevice("Device3", "AA:BB:CC:DD:EE:03", "Dual", -60, 3000L)
+            BluetoothDevice(
+                macAddress = "AA:BB:CC:DD:EE:01",
+                name = "Device1",
+                type = 1,
+                rssi = -70,
+                timestamp = 1000L
+            ),
+            BluetoothDevice(
+                macAddress = "AA:BB:CC:DD:EE:02",
+                name = "Device2",
+                type = 2,
+                rssi = -50,
+                timestamp = 2000L
+            ),
+            BluetoothDevice(
+                macAddress = "AA:BB:CC:DD:EE:03",
+                name = "Device3",
+                type = 3,
+                rssi = -60,
+                timestamp = 3000L
+            )
         )
         every { repository.getAllDevices() } returns flowOf(devices)
 

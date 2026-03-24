@@ -49,14 +49,14 @@ object TestUtils {
      */
     fun createTestBluetoothDevice(
         name: String = "TestDevice",
-        address: String = "AA:BB:CC:DD:EE:FF",
-        type: String = "Classic",
+        macAddress: String = "AA:BB:CC:DD:EE:FF",
+        type: Int = 1,
         rssi: Int = -70,
         timestamp: Long = System.currentTimeMillis()
     ): BluetoothDevice {
         return BluetoothDevice(
+            macAddress = macAddress,
             name = name,
-            address = address,
             type = type,
             rssi = rssi,
             timestamp = timestamp
@@ -70,7 +70,7 @@ object TestUtils {
         return (1..count).map { i ->
             createTestBluetoothDevice(
                 name = "Device$i",
-                address = "AA:BB:CC:DD:EE:${i.toString().padStart(2, '0')}",
+                macAddress = "AA:BB:CC:DD:EE:${i.toString().padStart(2, '0')}",
                 rssi = -50 - (i * 5),
                 timestamp = System.currentTimeMillis() - (i * 1000L)
             )
@@ -81,25 +81,23 @@ object TestUtils {
      * Creates a test Cellular tower with default or custom values.
      */
     fun createTestCellularTower(
-        type: String = "LTE",
+        cellId: Int = 12345,
+        lac: Int = 101,
         mcc: Int = 310,
         mnc: Int = 260,
-        cellId: Int = 12345,
-        pci: Int = 1,
+        signalStrength: Int = -85,
         latitude: Double = 40.7128,
         longitude: Double = -74.0060,
-        rssi: Int = -85,
         timestamp: Long = System.currentTimeMillis()
     ): CellularTower {
         return CellularTower(
-            type = type,
+            cellId = cellId,
+            lac = lac,
             mcc = mcc,
             mnc = mnc,
-            cellId = cellId,
-            pci = pci,
+            signalStrength = signalStrength,
             latitude = latitude,
             longitude = longitude,
-            rssi = rssi,
             timestamp = timestamp
         )
     }
@@ -110,12 +108,11 @@ object TestUtils {
     fun createTestCellularTowers(count: Int): List<CellularTower> {
         return (1..count).map { i ->
             createTestCellularTower(
-                type = if (i % 2 == 0) "LTE" else "5G",
                 cellId = 12345 + i,
-                pci = i,
+                lac = 100 + i,
                 latitude = 40.7128 + (i * 0.001),
                 longitude = -74.0060 + (i * 0.001),
-                rssi = -85 - (i * 2),
+                signalStrength = -85 - (i * 2),
                 timestamp = System.currentTimeMillis() - (i * 1000L)
             )
         }
