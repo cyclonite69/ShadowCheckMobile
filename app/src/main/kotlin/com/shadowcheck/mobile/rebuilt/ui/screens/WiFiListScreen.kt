@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.shadowcheck.mobile.presentation.viewmodel.WifiListViewModel
 import com.shadowcheck.mobile.rebuilt.presentation.theme.ShadowCheckColors
+import com.shadowcheck.mobile.wifi.model.WifiNetwork
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,6 +30,7 @@ fun WiFiListScreen(
     val uiState by viewModel.uiState.collectAsState()
     val networks = uiState.networks
     val distinctCount = uiState.distinctCount
+    val sightingsCounts = uiState.sightingsCounts
     
     Column(modifier = Modifier.fillMaxSize().background(ShadowCheckColors.Background)) {
         TopAppBar(

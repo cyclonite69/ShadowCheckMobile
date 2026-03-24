@@ -2,7 +2,7 @@ package com.shadowcheck.mobile.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.shadowcheck.mobile.domain.model.WifiNetwork
+import com.shadowcheck.mobile.core.model.WifiNetwork
 import com.shadowcheck.mobile.domain.usecase.GetAllWifiNetworksUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*

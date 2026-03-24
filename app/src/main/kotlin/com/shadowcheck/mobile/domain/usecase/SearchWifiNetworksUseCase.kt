@@ -1,6 +1,6 @@
 package com.shadowcheck.mobile.domain.usecase
 
-import com.shadowcheck.mobile.domain.model.WifiNetwork
+import com.shadowcheck.mobile.core.model.WifiNetwork
 import com.shadowcheck.mobile.domain.repository.WifiNetworkRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -26,7 +26,7 @@ class SearchWifiNetworksUseCase @Inject constructor(
             return emptyFlow()
         }
         return wifiNetworkRepository.searchNetworks(query).map { networks ->
-            networks.sortedByDescending { it.level }
+            networks.sortedByDescending { it.signalLevel }
         }
     }
 }

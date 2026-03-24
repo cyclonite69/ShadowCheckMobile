@@ -7,7 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.shadowcheck.mobile.domain.model.BluetoothDevice
 import com.shadowcheck.mobile.domain.model.CellularTower
-import com.shadowcheck.mobile.domain.model.WifiNetwork
+import com.shadowcheck.mobile.core.model.WifiNetwork
 import com.shadowcheck.mobile.domain.usecase.GetAllBluetoothDevicesUseCase
 import com.shadowcheck.mobile.domain.usecase.GetAllCellularTowersUseCase
 import com.shadowcheck.mobile.domain.usecase.GetAllWifiNetworksUseCase

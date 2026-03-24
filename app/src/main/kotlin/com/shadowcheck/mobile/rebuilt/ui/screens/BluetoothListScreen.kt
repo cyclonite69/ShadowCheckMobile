@@ -52,7 +52,7 @@ fun BluetoothCard(device: com.shadowcheck.mobile.domain.model.BluetoothDevice, s
         colors = CardDefaults.cardColors(containerColor = ShadowCheckColors.Surface)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Text(device.name.ifBlank { "Unknown Device" }, fontWeight = FontWeight.Bold, color = Color.White)
+            Text(device.name?.ifBlank { "Unknown Device" } ?: "Unknown Device", fontWeight = FontWeight.Bold, color = Color.White)
             Text(device.macAddress, fontSize = 12.sp, color = ShadowCheckColors.TextSecondary)
             Text("$sightings sightings", fontSize = 10.sp, color = ShadowCheckColors.Accent)
         }

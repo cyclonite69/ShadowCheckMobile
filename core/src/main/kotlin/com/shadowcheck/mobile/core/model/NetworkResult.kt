@@ -1,4 +1,4 @@
-package com.shadowcheck.mobile.domain.model
+package com.shadowcheck.mobile.core.model
 
 /**
  * A generic sealed class to represent the result of network operations.

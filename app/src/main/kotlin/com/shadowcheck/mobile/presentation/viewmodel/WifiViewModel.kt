@@ -2,10 +2,10 @@ package com.shadowcheck.mobile.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.shadowcheck.mobile.domain.model.WifiNetwork
-import com.shadowcheck.mobile.domain.usecase.GetAllWifiNetworksUseCase
-import com.shadowcheck.mobile.domain.usecase.SearchWifiNetworksUseCase
-import com.shadowcheck.mobile.domain.usecase.SyncWiGLEUseCase
+import com.shadowcheck.mobile.wifi.domain.usecase.GetAllWifiNetworksUseCase
+import com.shadowcheck.mobile.wifi.domain.usecase.SearchWifiNetworksUseCase
+import com.shadowcheck.mobile.wifi.domain.usecase.SyncWiGLEUseCase
+import com.shadowcheck.mobile.wifi.model.WifiNetwork
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -56,8 +56,12 @@ class WifiViewModel @Inject constructor(
             _isLoading.value = true
             try {
                 syncWiGLEUseCase(apiKey)
-                // Refresh data after sync
-                loadNetworks()
+                    .onSuccess {
+                        loadNetworks()
+                    }
+                    .onFailure { throwable ->
+                        _error.value = throwable.message
+                    }
             } catch (e: Exception) {
                 _error.value = e.message
             } finally {

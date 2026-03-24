@@ -1,9 +1,9 @@
 package com.shadowcheck.mobile.data.repository
 
+import com.shadowcheck.mobile.core.di.IoDispatcher
 import com.shadowcheck.mobile.data.database.dao.BluetoothDeviceDao
 import com.shadowcheck.mobile.data.database.model.toDomainModel
 import com.shadowcheck.mobile.data.database.model.toEntity
-import com.shadowcheck.mobile.di.IoDispatcher
 import com.shadowcheck.mobile.domain.model.BluetoothDevice
 import com.shadowcheck.mobile.domain.repository.BluetoothDeviceRepository
 import kotlinx.coroutines.CoroutineDispatcher

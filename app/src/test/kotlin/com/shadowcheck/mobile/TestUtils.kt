@@ -2,7 +2,7 @@ package com.shadowcheck.mobile
 
 import com.shadowcheck.mobile.domain.model.BluetoothDevice
 import com.shadowcheck.mobile.domain.model.CellularTower
-import com.shadowcheck.mobile.domain.model.WifiNetwork
+import com.shadowcheck.mobile.core.model.WifiNetwork
 
 /**
  * Common test utilities and factory methods for creating test data.
@@ -25,7 +25,7 @@ object TestUtils {
             bssid = bssid,
             capabilities = capabilities,
             frequency = frequency,
-            level = level,
+            signalLevel = level,
             timestamp = timestamp
         )
     }

@@ -1,9 +1,9 @@
 package com.shadowcheck.mobile.presentation.viewmodel
 
-import com.shadowcheck.mobile.domain.model.WifiNetwork
-import com.shadowcheck.mobile.domain.usecase.GetAllWifiNetworksUseCase
-import com.shadowcheck.mobile.domain.usecase.SearchWifiNetworksUseCase
-import com.shadowcheck.mobile.domain.usecase.SyncWiGLEUseCase
+import com.shadowcheck.mobile.wifi.domain.usecase.GetAllWifiNetworksUseCase
+import com.shadowcheck.mobile.wifi.domain.usecase.SearchWifiNetworksUseCase
+import com.shadowcheck.mobile.wifi.domain.usecase.SyncWiGLEUseCase
+import com.shadowcheck.mobile.wifi.model.WifiNetwork
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -101,7 +101,7 @@ class WifiViewModelTest {
         // Given
         val networks = emptyList<WifiNetwork>()
         every { getAllWifiNetworks() } returns flowOf(networks)
-        coEvery { syncWiGLE("test-api-key") } returns Unit
+        coEvery { syncWiGLE("test-api-key") } returns Result.success(1)
 
         viewModel = WifiViewModel(getAllWifiNetworks, searchWifiNetworks, syncWiGLE)
         advanceUntilIdle()
@@ -124,7 +124,7 @@ class WifiViewModelTest {
         // Given
         val networks = emptyList<WifiNetwork>()
         every { getAllWifiNetworks() } returns flowOf(networks)
-        coEvery { syncWiGLE("test-api-key") } throws Exception("Network error")
+        coEvery { syncWiGLE("test-api-key") } returns Result.failure(Exception("Network error"))
 
         viewModel = WifiViewModel(getAllWifiNetworks, searchWifiNetworks, syncWiGLE)
         advanceUntilIdle()

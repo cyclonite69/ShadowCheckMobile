@@ -8,5 +8,9 @@ data class WifiNetwork(
     val capabilities: String,
     val timestamp: Long,
     val latitude: Double = 0.0,
-    val longitude: Double = 0.0
+    val longitude: Double = 0.0,
+    val channel: Int = 0,
+    val channelWidth: Int = 0,
+    val firstSeen: Long = timestamp,
+    val lastSeen: Long = timestamp
 )

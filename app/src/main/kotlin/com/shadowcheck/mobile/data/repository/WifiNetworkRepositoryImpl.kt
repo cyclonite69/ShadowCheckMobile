@@ -1,13 +1,11 @@
 package com.shadowcheck.mobile.data.repository
 
 import android.util.Log
+import com.shadowcheck.mobile.core.di.IoDispatcher
+import com.shadowcheck.mobile.core.model.WifiNetwork
 import com.shadowcheck.mobile.data.database.dao.WifiNetworkDao
-import com.shadowcheck.mobile.data.database.model.toDomainModel
-import com.shadowcheck.mobile.data.database.model.toEntity
 import com.shadowcheck.mobile.data.remote.WiGLEApiService
 import com.shadowcheck.mobile.data.remote.dto.toEntity
-import com.shadowcheck.mobile.di.IoDispatcher
-import com.shadowcheck.mobile.domain.model.WifiNetwork
 import com.shadowcheck.mobile.domain.repository.WifiNetworkRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
@@ -27,26 +25,26 @@ class WifiNetworkRepositoryImpl @Inject constructor(
 
     override fun getAllNetworks(): Flow<List<WifiNetwork>> {
         return wifiDao.getAllNetworks().map { entities ->
-            entities.map { it.toDomainModel() }
+            entities.map { it.toCoreModel() }
         }.distinctUntilChanged().flowOn(dispatcher)
     }
 
     override fun getNetworkById(ssid: String): Flow<WifiNetwork?> {
-        return wifiDao.getNetworkBySsid(ssid).map { it?.toDomainModel() }.flowOn(dispatcher)
+        return wifiDao.getNetworkBySsid(ssid).map { it?.toCoreModel() }.flowOn(dispatcher)
     }
 
     override fun getNetworksByBssid(bssid: String): Flow<List<WifiNetwork>> {
         return wifiDao.getNetworksByBssid(bssid).map { entities ->
-            entities.map { it.toDomainModel() }
+            entities.map { it.toCoreModel() }
         }.flowOn(dispatcher)
     }
 
     override suspend fun insertNetwork(network: WifiNetwork): Long = withContext(dispatcher) {
-        wifiDao.insertNetwork(network.toEntity())
+        wifiDao.insertNetwork(network.toEntityModel())
     }
 
     override suspend fun updateNetwork(network: WifiNetwork) = withContext(dispatcher) {
-        wifiDao.updateNetwork(network.toEntity())
+        wifiDao.updateNetwork(network.toEntityModel())
     }
 
     override suspend fun deleteNetwork(ssid: String) = withContext(dispatcher) {
@@ -56,7 +54,7 @@ class WifiNetworkRepositoryImpl @Inject constructor(
     override fun searchNetworks(query: String): Flow<List<WifiNetwork>> {
         val formattedQuery = "%${query.replace(' ', '%')}%"
         return wifiDao.searchNetworks(formattedQuery).map { entities ->
-            entities.map { it.toDomainModel() }
+            entities.map { it.toCoreModel() }
         }.flowOn(dispatcher)
     }
 
@@ -79,3 +77,23 @@ class WifiNetworkRepositoryImpl @Inject constructor(
         return@withContext 0
     }
 }
+
+private fun com.shadowcheck.mobile.data.database.model.WifiNetworkEntity.toCoreModel(): WifiNetwork =
+    WifiNetwork(
+        bssid = bssid,
+        ssid = ssid,
+        frequency = frequency,
+        signalLevel = level,
+        capabilities = capabilities,
+        timestamp = timestamp
+    )
+
+private fun WifiNetwork.toEntityModel(): com.shadowcheck.mobile.data.database.model.WifiNetworkEntity =
+    com.shadowcheck.mobile.data.database.model.WifiNetworkEntity(
+        bssid = bssid,
+        ssid = ssid,
+        capabilities = capabilities,
+        frequency = frequency,
+        level = signalLevel,
+        timestamp = timestamp
+    )

@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.shadowcheck.mobile.core"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 26
@@ -23,6 +23,7 @@ android {
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.17.0")
+    implementation("androidx.core:core-ktx:1.15.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+    implementation("javax.inject:javax.inject:1")
 }

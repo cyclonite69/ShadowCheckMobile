@@ -1,4 +1,4 @@
-package com.shadowcheck.mobile.domain.model
+package com.shadowcheck.mobile.core.model
 
 data class UnifiedSighting(
     val id: String,

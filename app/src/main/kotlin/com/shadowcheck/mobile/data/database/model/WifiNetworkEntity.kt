@@ -2,7 +2,7 @@ package com.shadowcheck.mobile.data.database.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.shadowcheck.mobile.domain.model.WifiNetwork
+import com.shadowcheck.mobile.core.model.WifiNetwork
 
 @Entity(tableName = "wifi_networks")
 data class WifiNetworkEntity(
@@ -14,6 +14,22 @@ data class WifiNetworkEntity(
     val timestamp: Long
 )
 
-fun WifiNetworkEntity.toDomainModel(): WifiNetwork = WifiNetwork(ssid, bssid, capabilities, frequency, level, timestamp)
+fun WifiNetworkEntity.toDomainModel(): WifiNetwork =
+    WifiNetwork(
+        ssid = ssid,
+        bssid = bssid,
+        capabilities = capabilities,
+        frequency = frequency,
+        signalLevel = level,
+        timestamp = timestamp
+    )
 
-fun WifiNetwork.toEntity(): WifiNetworkEntity = WifiNetworkEntity(bssid, ssid, capabilities, frequency, level, timestamp)
+fun WifiNetwork.toEntity(): WifiNetworkEntity =
+    WifiNetworkEntity(
+        bssid = bssid,
+        ssid = ssid,
+        capabilities = capabilities,
+        frequency = frequency,
+        level = signalLevel,
+        timestamp = timestamp
+    )

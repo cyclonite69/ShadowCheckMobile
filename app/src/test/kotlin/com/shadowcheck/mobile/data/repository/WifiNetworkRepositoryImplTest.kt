@@ -1,22 +1,18 @@
-package com.shadowcheck.mobile.data.repository
+package com.shadowcheck.mobile.wifi.data.repository
 
-import com.shadowcheck.mobile.data.database.dao.WifiNetworkDao
-import com.shadowcheck.mobile.data.database.model.WifiNetworkEntity
-import com.shadowcheck.mobile.data.database.model.toDomainModel
-import com.shadowcheck.mobile.data.remote.WiGLEApiService
-import com.shadowcheck.mobile.data.remote.dto.WigleNetworkDto
-import com.shadowcheck.mobile.data.remote.dto.WigleWifiSearchResponse
-import com.shadowcheck.mobile.di.IoDispatcher
+import com.shadowcheck.mobile.wifi.data.local.dao.WifiNetworkDao
+import com.shadowcheck.mobile.wifi.data.local.entity.WifiNetworkEntity
+import com.shadowcheck.mobile.wifi.data.remote.WiGLEApiService
+import com.shadowcheck.mobile.wifi.data.remote.dto.WigleNetworkDto
+import com.shadowcheck.mobile.wifi.data.remote.dto.WigleWifiSearchResponse
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
-import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -71,7 +67,7 @@ class WifiNetworkRepositoryImplTest {
         coEvery { wifiDao.insertNetwork(any()) } returns 1L
 
         // When
-        val result = repository.insertNetwork(networkEntity1.toDomainModel())
+        val result = repository.insertNetwork(networkEntity1.toModel())
 
         // Then
         assertEquals(1L, result)

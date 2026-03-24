@@ -1,7 +1,7 @@
-package com.shadowcheck.mobile.domain.usecase
+package com.shadowcheck.mobile.wifi.domain.usecase
 
-import com.shadowcheck.mobile.domain.model.WifiNetwork
-import com.shadowcheck.mobile.domain.repository.WifiNetworkRepository
+import com.shadowcheck.mobile.wifi.domain.repository.WifiNetworkRepository
+import com.shadowcheck.mobile.wifi.model.WifiNetwork
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
@@ -42,8 +42,8 @@ class SearchWifiNetworksUseCaseTest {
 
         // Then
         assertEquals(2, result.size)
-        assertEquals(-50, result[0].level) // Check if sorted by signal strength
-        assertEquals(-70, result[1].level)
+        assertEquals(-50, result[0].signalLevel)
+        assertEquals(-70, result[1].signalLevel)
     }
 
     @Test

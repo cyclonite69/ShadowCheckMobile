@@ -131,3 +131,36 @@ object HeatmapGenerator {
         )
     }
 }
+
+object HeatmapData {
+    data class HeatmapPoint(
+        val x: Int,
+        val y: Int,
+        val intensity: Double
+    )
+
+    fun generateWiFiHeatmap(networks: List<com.shadowcheck.mobile.core.model.WifiNetwork>): List<HeatmapPoint> =
+        buildPoints(networks.map { it.signalLevel })
+
+    fun generateBluetoothHeatmap(devices: List<BluetoothDevice>): List<HeatmapPoint> =
+        buildPoints(devices.map { it.rssi })
+
+    fun generateCellularHeatmap(towers: List<CellularTower>): List<HeatmapPoint> =
+        buildPoints(towers.map { it.signalStrength })
+
+    private fun buildPoints(signals: List<Int>): List<HeatmapPoint> {
+        if (signals.isEmpty()) return emptyList()
+
+        return signals.take(64).mapIndexed { index, signal ->
+            val column = index % 8
+            val row = index / 8
+            val intensity = ((signal + 120).coerceIn(0, 120) / 120.0).coerceIn(0.15, 1.0)
+
+            HeatmapPoint(
+                x = 80 + (column * 100),
+                y = 80 + (row * 100),
+                intensity = intensity
+            )
+        }
+    }
+}

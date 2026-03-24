@@ -15,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.shadowcheck.mobile.presentation.viewmodel.Threat
 import com.shadowcheck.mobile.presentation.viewmodel.ThreatDetectionViewModel
 import com.shadowcheck.mobile.rebuilt.presentation.theme.ShadowCheckColors
 
@@ -152,4 +153,3 @@ fun ThreatCard(threat: Threat) {
         }
     }
 }
-

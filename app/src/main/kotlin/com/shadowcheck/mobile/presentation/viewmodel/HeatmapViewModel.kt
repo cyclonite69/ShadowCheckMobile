@@ -2,6 +2,7 @@ package com.shadowcheck.mobile.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.shadowcheck.mobile.core.model.WifiNetwork
 import com.shadowcheck.mobile.domain.model.HeatmapData
 import com.shadowcheck.mobile.domain.usecase.GetAllBluetoothDevicesUseCase
 import com.shadowcheck.mobile.domain.usecase.GetAllCellularTowersUseCase
@@ -32,7 +33,7 @@ class HeatmapViewModel @Inject constructor(
             getAllWifiNetworksUseCase(),
             getAllBluetoothDevicesUseCase(),
             getAllCellularTowersUseCase()
-        ) { wifi, bt, cell ->
+        ) { wifi: List<WifiNetwork>, bt, cell ->
             HeatmapUiState(
                 wifiHeatmap = HeatmapData.generateWiFiHeatmap(wifi),
                 btHeatmap = HeatmapData.generateBluetoothHeatmap(bt),

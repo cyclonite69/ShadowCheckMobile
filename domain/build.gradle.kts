@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.shadowcheck.mobile.domain"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 26
@@ -27,8 +27,8 @@ dependencies {
     implementation(project(":core"))
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
-    implementation("com.google.dagger:hilt-android:2.59.2")
-    ksp("com.google.dagger:hilt-compiler:2.59.2")
+    implementation("com.google.dagger:hilt-android:2.51.1")
+    ksp("com.google.dagger:hilt-compiler:2.51.1")
 
     implementation("javax.inject:javax.inject:1")
 }

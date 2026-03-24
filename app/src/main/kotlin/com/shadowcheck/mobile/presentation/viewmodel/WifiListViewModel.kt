@@ -2,13 +2,14 @@ package com.shadowcheck.mobile.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.shadowcheck.mobile.domain.usecase.GetAllWifiNetworksUseCase
+import com.shadowcheck.mobile.wifi.domain.usecase.GetAllWifiNetworksUseCase
+import com.shadowcheck.mobile.wifi.model.WifiNetwork
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 data class WifiListUiState(
-    val networks: List<com.shadowcheck.mobile.domain.model.WifiNetwork> = emptyList(),
+    val networks: List<WifiNetwork> = emptyList(),
     val distinctCount: Int = 0,
     val sightingsCounts: Map<String, Int> = emptyMap()
 )

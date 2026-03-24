@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.shadowcheck.mobile.core.model.WifiNetwork
 import com.shadowcheck.mobile.presentation.viewmodel.NetworkDetailViewModel
 import com.shadowcheck.mobile.rebuilt.presentation.theme.ShadowCheckColors
 import java.text.SimpleDateFormat
@@ -69,7 +70,7 @@ fun NetworkDetailScreen(
                     }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("Avg Signal", color = ShadowCheckColors.TextSecondary, fontSize = 12.sp)
-                        Text("$avgSignal dBm", color = ShadowCheckColors.Primary, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+                        Text("${uiState.avgSignal} dBm", color = ShadowCheckColors.Primary, fontSize = 32.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -106,13 +107,13 @@ fun NetworkDetailScreen(
                 SignalGraph(sightings)
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Column {
-                        Text("Min: $minSignal dBm", color = ShadowCheckColors.TextSecondary, fontSize = 12.sp)
+                        Text("Min: ${uiState.minSignal} dBm", color = ShadowCheckColors.TextSecondary, fontSize = 12.sp)
                         if (sightings.isNotEmpty()) {
                             Text(formatTimestamp(sightings.first().timestamp), color = ShadowCheckColors.TextSecondary, fontSize = 10.sp)
                         }
                     }
                     Column(horizontalAlignment = Alignment.End) {
-                        Text("Max: $maxSignal dBm", color = ShadowCheckColors.TextSecondary, fontSize = 12.sp)
+                        Text("Max: ${uiState.maxSignal} dBm", color = ShadowCheckColors.TextSecondary, fontSize = 12.sp)
                         if (sightings.isNotEmpty()) {
                             Text(formatTimestamp(sightings.last().timestamp), color = ShadowCheckColors.TextSecondary, fontSize = 10.sp)
                         }
@@ -133,7 +134,9 @@ fun NetworkDetailScreen(
                 Spacer(modifier = Modifier.height(8.dp))
                 network?.let { net ->
                     InfoRow("Frequency", "${net.frequency} MHz")
-                    InfoRow("Channel", "${net.channel} (Width: ${net.channelWidth} MHz)")
+                    if (net.channel > 0) {
+                        InfoRow("Channel", "${net.channel} (Width: ${net.channelWidth} MHz)")
+                    }
                     InfoRow("Security", net.capabilities)
                     InfoRow("First Seen", formatTimestamp(net.firstSeen))
                     InfoRow("Last Seen", formatTimestamp(net.lastSeen))

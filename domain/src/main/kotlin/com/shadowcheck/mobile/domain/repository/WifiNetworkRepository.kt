@@ -10,6 +10,6 @@ interface WifiNetworkRepository {
     suspend fun insertNetwork(network: WifiNetwork): Long
     suspend fun updateNetwork(network: WifiNetwork)
     suspend fun deleteNetwork(network: WifiNetwork)
-    suspend fun searchNetworks(query: String): Flow<List<WifiNetwork>>
+    fun searchNetworks(query: String): Flow<List<WifiNetwork>>
     suspend fun syncWithWiGLE(apiKey: String): Result<Int>
 }

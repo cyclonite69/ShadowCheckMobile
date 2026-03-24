@@ -1,6 +1,6 @@
 package com.shadowcheck.mobile.domain.repository
 
-import com.shadowcheck.mobile.domain.model.WifiNetwork
+import com.shadowcheck.mobile.core.model.WifiNetwork
 import kotlinx.coroutines.flow.Flow
 
 interface WifiNetworkRepository {
