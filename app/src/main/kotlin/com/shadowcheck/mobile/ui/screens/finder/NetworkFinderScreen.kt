@@ -9,8 +9,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.shadowcheck.mobile.data.WifiNetwork
 import com.shadowcheck.mobile.rebuilt.presentation.theme.ShadowCheckColors
+import com.shadowcheck.mobile.wifi.model.WifiNetwork
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin

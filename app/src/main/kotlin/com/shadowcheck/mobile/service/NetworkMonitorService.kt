@@ -9,11 +9,11 @@ import android.net.wifi.WifiInfo
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import com.shadowcheck.mobile.data.ShadowCheckDatabase
-import com.shadowcheck.mobile.data.WifiNetwork
 import com.shadowcheck.mobile.domain.model.ThreatDetection
 import com.shadowcheck.mobile.domain.model.ThreatSeverity
 import com.shadowcheck.mobile.domain.model.ThreatType
+import com.shadowcheck.mobile.wifi.domain.repository.WifiNetworkRepository
+import com.shadowcheck.mobile.wifi.model.WifiNetwork
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 
 class NetworkMonitorService(
     private val context: Context,
-    private val db: ShadowCheckDatabase
+    private val wifiNetworkRepository: WifiNetworkRepository
 ) {
     private val scope = CoroutineScope(Dispatchers.Default)
     private val connectivityManager = context.getSystemService(ConnectivityManager::class.java)
@@ -129,17 +129,17 @@ class NetworkMonitorService(
     
     private suspend fun saveWiFiConnection(wifiInfo: WifiInfo) {
         val network = WifiNetwork(
-            bssid = wifiInfo.bssid ?: return,
             ssid = wifiInfo.ssid ?: "",
+            bssid = wifiInfo.bssid ?: return,
+            capabilities = "",
             frequency = wifiInfo.frequency,
             signalLevel = wifiInfo.rssi,
-            latitude = 0.0, // Will be updated by location service
-            longitude = 0.0,
             timestamp = System.currentTimeMillis(),
-            source = "network_callback"
+            latitude = 0.0,
+            longitude = 0.0
         )
         
-        db.wifiNetworkDao().insert(network)
+        wifiNetworkRepository.insertNetwork(network)
     }
     
     private suspend fun detectDeauthAttack(reason: Int, reasonText: String) {

@@ -29,9 +29,6 @@ import com.shadowcheck.mobile.rebuilt.presentation.theme.ShadowCheckTheme
 import com.shadowcheck.mobile.rebuilt.presentation.theme.ShadowCheckColors
 import com.shadowcheck.mobile.rebuilt.ui.screens.HomeScreen
 import com.shadowcheck.mobile.ui.Sidebar
-import com.shadowcheck.mobile.ui.screens.lists.NetworkListScreen
-import com.shadowcheck.mobile.ui.screens.lists.BluetoothListScreen
-import com.shadowcheck.mobile.ui.screens.lists.CellularListScreen
 import com.shadowcheck.mobile.ui.screens.maps.MapScreen
 import com.shadowcheck.mobile.rebuilt.ui.screens.PlaybackScreen
 import com.shadowcheck.mobile.ui.screens.finder.NetworkFinderScreen
@@ -77,32 +74,21 @@ fun MainScreen() {
             }
             composable("wifi") {
                 currentRoute = "wifi"
-                NetworkListScreen(
-                    networks = emptyList(),
-                    filters = com.shadowcheck.mobile.models.WiFiFilters(),
-                    onFiltersChange = {},
-                    onNetworkClick = {},
-                    onExport = {}
+                com.shadowcheck.mobile.rebuilt.ui.screens.WiFiListScreen(
+                    onBack = { navController.popBackStack() },
+                    onNetworkClick = { bssid -> navController.navigate("network_detail/$bssid") }
                 )
             }
             composable("bluetooth") {
                 currentRoute = "bluetooth"
-                BluetoothListScreen(
-                    devices = emptyList(),
-                    filters = com.shadowcheck.mobile.models.BluetoothFilters(),
-                    onFiltersChange = {},
-                    onDeviceClick = {},
-                    onExport = {}
+                com.shadowcheck.mobile.rebuilt.ui.screens.BluetoothListScreen(
+                    onBack = { navController.popBackStack() }
                 )
             }
             composable("cellular") {
                 currentRoute = "cellular"
-                CellularListScreen(
-                    towers = emptyList(),
-                    filters = com.shadowcheck.mobile.models.CellularFilters(),
-                    onFiltersChange = {},
-                    onTowerClick = {},
-                    onExport = {}
+                com.shadowcheck.mobile.rebuilt.ui.screens.CellularListScreen(
+                    onBack = { navController.popBackStack() }
                 )
             }
             composable("map") {
@@ -138,13 +124,7 @@ fun MainScreen() {
             }
             composable("geofence") {
                 currentRoute = "geofence"
-                GeofenceScreen(
-                    geofences = emptyList(),
-                    onAddGeofence = {},
-                    onEditGeofence = {},
-                    onDeleteGeofence = {},
-                    onToggleGeofence = { _ -> }
-                )
+                com.shadowcheck.mobile.ui.screens.security.GeofenceRoute()
             }
             composable("channels") {
                 currentRoute = "channels"

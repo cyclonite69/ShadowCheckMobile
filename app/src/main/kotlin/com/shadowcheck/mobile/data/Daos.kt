@@ -161,6 +161,9 @@ interface RadioManufacturerDao {
 
 @Dao
 interface GeofenceDao {
+    @Query("SELECT * FROM geofences ORDER BY createdAt DESC")
+    fun getAllFlow(): Flow<List<Geofence>>
+
     @Query("SELECT * FROM geofences WHERE isActive = 1")
     fun getActiveFlow(): Flow<List<Geofence>>
 
