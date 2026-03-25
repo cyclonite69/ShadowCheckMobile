@@ -2,36 +2,38 @@ package com.shadowcheck.mobile.data.database.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.shadowcheck.mobile.core.model.BluetoothDevice
+import com.shadowcheck.mobile.core.model.BleDevice
 
-@Entity(tableName = "bluetooth_devices")
-data class BluetoothDeviceEntity(
+@Entity(tableName = "ble_devices")
+data class BleDeviceEntity(
     @PrimaryKey val macAddress: String,
     val name: String?,
-    val type: Int,
     val rssi: Int,
-    val timestamp: Long,
+    val txPower: Int = 0,
+    val isConnectable: Boolean = false,
+    val serviceUuids: String = "",
+    val manufacturerData: String = "",
     val latitude: Double = 0.0,
     val longitude: Double = 0.0,
-    val deviceClass: Int = 0,
-    val bondState: Int = 0,
     val altitude: Double = 0.0,
     val accuracy: Float = 0f,
+    val timestamp: Long,
     val firstSeen: Long = timestamp,
     val lastSeen: Long = timestamp,
     val source: String = ""
 )
 
-fun BluetoothDeviceEntity.toDomainModel(): BluetoothDevice = BluetoothDevice(
+fun BleDeviceEntity.toDomainModel(): BleDevice = BleDevice(
     macAddress = macAddress,
     name = name.orEmpty(),
     rssi = rssi,
     timestamp = timestamp,
-    deviceType = type,
+    txPower = txPower,
+    isConnectable = isConnectable,
+    serviceUuids = serviceUuids,
+    manufacturerData = manufacturerData,
     latitude = latitude,
     longitude = longitude,
-    deviceClass = deviceClass,
-    bondState = bondState,
     altitude = altitude,
     accuracy = accuracy,
     firstSeen = firstSeen,
@@ -39,16 +41,17 @@ fun BluetoothDeviceEntity.toDomainModel(): BluetoothDevice = BluetoothDevice(
     source = source
 )
 
-fun BluetoothDevice.toEntity(): BluetoothDeviceEntity = BluetoothDeviceEntity(
+fun BleDevice.toEntity(): BleDeviceEntity = BleDeviceEntity(
     macAddress = macAddress,
     name = name,
-    type = deviceType,
     rssi = rssi,
     timestamp = timestamp,
+    txPower = txPower,
+    isConnectable = isConnectable,
+    serviceUuids = serviceUuids,
+    manufacturerData = manufacturerData,
     latitude = latitude,
     longitude = longitude,
-    deviceClass = deviceClass,
-    bondState = bondState,
     altitude = altitude,
     accuracy = accuracy,
     firstSeen = firstSeen,

@@ -1,5 +1,9 @@
 package com.shadowcheck.mobile.domain.model
 
+import com.shadowcheck.mobile.core.model.BluetoothDevice
+import com.shadowcheck.mobile.core.model.CellularTower
+import com.shadowcheck.mobile.core.model.WifiNetwork
+
 data class HeatmapPoint(
     val latitude: Double,
     val longitude: Double,
@@ -18,7 +22,7 @@ data class HeatmapLayer(
 object HeatmapGenerator {
     
     fun generateWiFiHeatmap(
-        networks: List<com.shadowcheck.mobile.data.WifiNetwork>,
+        networks: List<WifiNetwork>,
         gridSize: Double = 0.0001 // ~11 meters
     ): HeatmapLayer {
         val points = networks
@@ -56,7 +60,7 @@ object HeatmapGenerator {
     }
     
     fun generateBluetoothHeatmap(
-        devices: List<com.shadowcheck.mobile.data.BluetoothDevice>,
+        devices: List<BluetoothDevice>,
         gridSize: Double = 0.0001
     ): HeatmapLayer {
         val points = devices
@@ -94,7 +98,7 @@ object HeatmapGenerator {
     }
     
     fun generateCellularHeatmap(
-        towers: List<com.shadowcheck.mobile.data.CellularTower>,
+        towers: List<CellularTower>,
         gridSize: Double = 0.001 // ~111 meters
     ): HeatmapLayer {
         val points = towers
@@ -142,10 +146,10 @@ object HeatmapData {
     fun generateWiFiHeatmap(networks: List<com.shadowcheck.mobile.wifi.model.WifiNetwork>): List<HeatmapPoint> =
         buildPoints(networks.map { it.signalLevel })
 
-    fun generateBluetoothHeatmap(devices: List<com.shadowcheck.mobile.core.model.BluetoothDevice>): List<HeatmapPoint> =
+    fun generateBluetoothHeatmap(devices: List<BluetoothDevice>): List<HeatmapPoint> =
         buildPoints(devices.map { it.rssi })
 
-    fun generateCellularHeatmap(towers: List<com.shadowcheck.mobile.core.model.CellularTower>): List<HeatmapPoint> =
+    fun generateCellularHeatmap(towers: List<CellularTower>): List<HeatmapPoint> =
         buildPoints(towers.map { it.signalStrength })
 
     private fun buildPoints(signals: List<Int>): List<HeatmapPoint> {

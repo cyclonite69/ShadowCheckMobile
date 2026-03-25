@@ -14,7 +14,16 @@ data class CellularTowerEntity(
     val signalStrength: Int,
     val latitude: Double,
     val longitude: Double,
-    val timestamp: Long
+    val timestamp: Long,
+    val psc: Int = 0,
+    val signalQuality: Int = 0,
+    val networkType: String = "",
+    val operatorName: String = "",
+    val altitude: Double = 0.0,
+    val accuracy: Float = 0f,
+    val firstSeen: Long = timestamp,
+    val lastSeen: Long = timestamp,
+    val source: String = ""
 )
 
 fun CellularTowerEntity.toDomainModel(): CellularTower = CellularTower(
@@ -25,7 +34,16 @@ fun CellularTowerEntity.toDomainModel(): CellularTower = CellularTower(
     signalStrength = signalStrength,
     timestamp = timestamp,
     latitude = latitude,
-    longitude = longitude
+    longitude = longitude,
+    psc = psc,
+    signalQuality = signalQuality,
+    networkType = networkType,
+    operatorName = operatorName,
+    altitude = altitude,
+    accuracy = accuracy,
+    firstSeen = firstSeen,
+    lastSeen = lastSeen,
+    source = source
 )
 
 fun CellularTower.toEntity(): CellularTowerEntity = CellularTowerEntity(
@@ -36,5 +54,14 @@ fun CellularTower.toEntity(): CellularTowerEntity = CellularTowerEntity(
     signalStrength = signalStrength,
     latitude = latitude,
     longitude = longitude,
-    timestamp = timestamp
+    timestamp = timestamp,
+    psc = psc,
+    signalQuality = signalQuality,
+    networkType = networkType,
+    operatorName = operatorName,
+    altitude = altitude,
+    accuracy = accuracy,
+    firstSeen = firstSeen,
+    lastSeen = lastSeen,
+    source = source
 )
