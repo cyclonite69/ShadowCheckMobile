@@ -1,6 +1,6 @@
 package com.shadowcheck.mobile.presentation.viewmodel
 
-import com.shadowcheck.mobile.domain.model.CellularTower
+import com.shadowcheck.mobile.core.model.CellularTower
 import com.shadowcheck.mobile.domain.usecase.GetAllCellularTowersUseCase
 import com.shadowcheck.mobile.domain.usecase.GetTowersByLocationUseCase
 import io.mockk.every

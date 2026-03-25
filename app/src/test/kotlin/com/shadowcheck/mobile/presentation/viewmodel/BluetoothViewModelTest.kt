@@ -1,6 +1,6 @@
 package com.shadowcheck.mobile.presentation.viewmodel
 
-import com.shadowcheck.mobile.domain.model.BluetoothDevice
+import com.shadowcheck.mobile.core.model.BluetoothDevice
 import com.shadowcheck.mobile.domain.usecase.GetAllBluetoothDevicesUseCase
 import com.shadowcheck.mobile.domain.usecase.GetNearbyBluetoothDevicesUseCase
 import io.mockk.every
@@ -53,16 +53,16 @@ class BluetoothViewModelTest {
             BluetoothDevice(
                 macAddress = "AA:BB:CC:DD:EE:01",
                 name = "Device1",
-                type = 1,
                 rssi = -70,
-                timestamp = 1000L
+                timestamp = 1000L,
+                deviceType = 1
             ),
             BluetoothDevice(
                 macAddress = "AA:BB:CC:DD:EE:02",
                 name = "Device2",
-                type = 2,
                 rssi = -50,
-                timestamp = 2000L
+                timestamp = 2000L,
+                deviceType = 2
             )
         )
         every { getAllBluetoothDevices() } returns flowOf(devices)
@@ -83,9 +83,9 @@ class BluetoothViewModelTest {
             BluetoothDevice(
                 macAddress = "AA:BB:CC:DD:EE:01",
                 name = "Device1",
-                type = 1,
                 rssi = -70,
-                timestamp = 1000L
+                timestamp = 1000L,
+                deviceType = 1
             )
         )
         every { getAllBluetoothDevices() } returns flowOf(devices)
@@ -108,18 +108,18 @@ class BluetoothViewModelTest {
             BluetoothDevice(
                 macAddress = "AA:BB:CC:DD:EE:01",
                 name = "Device1",
-                type = 1,
                 rssi = -70,
-                timestamp = 1000L
+                timestamp = 1000L,
+                deviceType = 1
             )
         )
         val nearbyDevices = listOf(
             BluetoothDevice(
                 macAddress = "AA:BB:CC:DD:EE:02",
                 name = "NearbyDevice",
-                type = 2,
                 rssi = -50,
-                timestamp = 2000L
+                timestamp = 2000L,
+                deviceType = 2
             )
         )
         every { getAllBluetoothDevices() } returns flowOf(allDevices)
@@ -145,9 +145,9 @@ class BluetoothViewModelTest {
             BluetoothDevice(
                 macAddress = "AA:BB:CC:DD:EE:01",
                 name = "NearbyDevice",
-                type = 2,
                 rssi = -60,
-                timestamp = 1000L
+                timestamp = 1000L,
+                deviceType = 2
             )
         )
         every { getAllBluetoothDevices() } returns flowOf(allDevices)

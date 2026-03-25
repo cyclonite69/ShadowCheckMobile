@@ -2,10 +2,10 @@ package com.shadowcheck.mobile.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.shadowcheck.mobile.core.model.WifiNetwork
 import com.shadowcheck.mobile.domain.model.SurveillanceDetector
 import com.shadowcheck.mobile.domain.usecase.GetAllBluetoothDevicesUseCase
-import com.shadowcheck.mobile.domain.usecase.GetAllWifiNetworksUseCase
+import com.shadowcheck.mobile.wifi.domain.usecase.GetAllWifiNetworksUseCase
+import com.shadowcheck.mobile.wifi.model.WifiNetwork
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*

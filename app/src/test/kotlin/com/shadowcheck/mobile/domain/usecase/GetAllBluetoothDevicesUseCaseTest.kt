@@ -1,6 +1,6 @@
 package com.shadowcheck.mobile.domain.usecase
 
-import com.shadowcheck.mobile.domain.model.BluetoothDevice
+import com.shadowcheck.mobile.core.model.BluetoothDevice
 import com.shadowcheck.mobile.domain.repository.BluetoothDeviceRepository
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
@@ -34,23 +34,23 @@ class GetAllBluetoothDevicesUseCaseTest {
             BluetoothDevice(
                 macAddress = "AA:BB:CC:DD:EE:01",
                 name = "Device1",
-                type = 1,
                 rssi = -70,
-                timestamp = 1000L
+                timestamp = 1000L,
+                deviceType = 1
             ),
             BluetoothDevice(
                 macAddress = "AA:BB:CC:DD:EE:02",
                 name = "Device2",
-                type = 2,
                 rssi = -50,
-                timestamp = 2000L
+                timestamp = 2000L,
+                deviceType = 2
             ),
             BluetoothDevice(
                 macAddress = "AA:BB:CC:DD:EE:03",
                 name = "Device3",
-                type = 3,
                 rssi = -60,
-                timestamp = 3000L
+                timestamp = 3000L,
+                deviceType = 3
             )
         )
         every { repository.getAllDevices() } returns flowOf(devices)

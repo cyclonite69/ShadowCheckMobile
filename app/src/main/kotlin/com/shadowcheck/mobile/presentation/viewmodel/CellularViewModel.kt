@@ -2,7 +2,7 @@ package com.shadowcheck.mobile.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.shadowcheck.mobile.domain.model.CellularTower
+import com.shadowcheck.mobile.core.model.CellularTower
 import com.shadowcheck.mobile.domain.usecase.GetAllCellularTowersUseCase
 import com.shadowcheck.mobile.domain.usecase.GetTowersByLocationUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel

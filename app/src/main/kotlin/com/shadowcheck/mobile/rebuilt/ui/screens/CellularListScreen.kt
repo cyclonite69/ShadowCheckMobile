@@ -15,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.shadowcheck.mobile.core.model.CellularTower
 import com.shadowcheck.mobile.presentation.viewmodel.CellularListViewModel
 import com.shadowcheck.mobile.rebuilt.presentation.theme.ShadowCheckColors
 
@@ -46,7 +47,7 @@ fun CellularListScreen(
 }
 
 @Composable
-fun CellularCard(tower: com.shadowcheck.mobile.domain.model.CellularTower, sightings: Int) {
+fun CellularCard(tower: CellularTower, sightings: Int) {
     Card(
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
         colors = CardDefaults.cardColors(containerColor = ShadowCheckColors.Surface)

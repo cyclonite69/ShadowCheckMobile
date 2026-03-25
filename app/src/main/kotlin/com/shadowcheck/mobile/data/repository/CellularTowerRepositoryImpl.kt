@@ -1,10 +1,10 @@
 package com.shadowcheck.mobile.data.repository
 
 import com.shadowcheck.mobile.core.di.IoDispatcher
+import com.shadowcheck.mobile.core.model.CellularTower
 import com.shadowcheck.mobile.data.database.dao.CellularTowerDao
 import com.shadowcheck.mobile.data.database.model.toDomainModel
 import com.shadowcheck.mobile.data.database.model.toEntity
-import com.shadowcheck.mobile.domain.model.CellularTower
 import com.shadowcheck.mobile.domain.repository.CellularTowerRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow

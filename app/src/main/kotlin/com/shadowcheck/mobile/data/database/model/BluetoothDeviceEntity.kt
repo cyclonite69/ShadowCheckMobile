@@ -2,7 +2,7 @@ package com.shadowcheck.mobile.data.database.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.shadowcheck.mobile.domain.model.BluetoothDevice
+import com.shadowcheck.mobile.core.model.BluetoothDevice
 
 @Entity(tableName = "bluetooth_devices")
 data class BluetoothDeviceEntity(
@@ -13,6 +13,18 @@ data class BluetoothDeviceEntity(
     val timestamp: Long
 )
 
-fun BluetoothDeviceEntity.toDomainModel(): BluetoothDevice = BluetoothDevice(macAddress, name, type, rssi, timestamp)
+fun BluetoothDeviceEntity.toDomainModel(): BluetoothDevice = BluetoothDevice(
+    macAddress = macAddress,
+    name = name.orEmpty(),
+    rssi = rssi,
+    timestamp = timestamp,
+    deviceType = type
+)
 
-fun BluetoothDevice.toEntity(): BluetoothDeviceEntity = BluetoothDeviceEntity(macAddress, name, type, rssi, timestamp)
+fun BluetoothDevice.toEntity(): BluetoothDeviceEntity = BluetoothDeviceEntity(
+    macAddress = macAddress,
+    name = name,
+    type = deviceType,
+    rssi = rssi,
+    timestamp = timestamp
+)

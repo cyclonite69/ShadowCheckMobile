@@ -1,7 +1,7 @@
 package com.shadowcheck.mobile
 
-import com.shadowcheck.mobile.domain.model.BluetoothDevice
-import com.shadowcheck.mobile.domain.model.CellularTower
+import com.shadowcheck.mobile.core.model.BluetoothDevice
+import com.shadowcheck.mobile.core.model.CellularTower
 import com.shadowcheck.mobile.core.model.WifiNetwork
 
 /**
@@ -50,16 +50,16 @@ object TestUtils {
     fun createTestBluetoothDevice(
         name: String = "TestDevice",
         macAddress: String = "AA:BB:CC:DD:EE:FF",
-        type: Int = 1,
+        deviceType: Int = 1,
         rssi: Int = -70,
         timestamp: Long = System.currentTimeMillis()
     ): BluetoothDevice {
         return BluetoothDevice(
             macAddress = macAddress,
             name = name,
-            type = type,
             rssi = rssi,
-            timestamp = timestamp
+            timestamp = timestamp,
+            deviceType = deviceType
         )
     }
 

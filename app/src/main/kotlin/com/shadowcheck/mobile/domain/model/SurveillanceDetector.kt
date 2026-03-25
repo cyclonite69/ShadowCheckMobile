@@ -2,7 +2,9 @@ package com.shadowcheck.mobile.domain.model
 
 import javax.inject.Inject
 import javax.inject.Singleton
-import com.shadowcheck.mobile.core.model.WifiNetwork
+import com.shadowcheck.mobile.core.model.BluetoothDevice
+import com.shadowcheck.mobile.core.model.CellularTower
+import com.shadowcheck.mobile.wifi.model.WifiNetwork
 
 @Singleton
 class SurveillanceDetector @Inject constructor() {
@@ -92,7 +94,7 @@ class SurveillanceDetector @Inject constructor() {
                     type = ThreatType.SURVEILLANCE_DEVICE,
                     severity = ThreatSeverity.MEDIUM,
                     title = "Strong Bluetooth Signal",
-                    description = "Nearby Bluetooth device: ${device.name ?: device.macAddress}",
+                    description = "Nearby Bluetooth device: ${device.name.ifBlank { device.macAddress }}",
                     confidence = 0.4f,
                     timestamp = System.currentTimeMillis(),
                     affectedDevices = listOf(device.macAddress)

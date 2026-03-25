@@ -17,9 +17,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.shadowcheck.mobile.core.model.WifiNetwork
 import com.shadowcheck.mobile.presentation.viewmodel.NetworkDetailViewModel
 import com.shadowcheck.mobile.rebuilt.presentation.theme.ShadowCheckColors
+import com.shadowcheck.mobile.wifi.model.WifiNetwork
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -134,12 +134,13 @@ fun NetworkDetailScreen(
                 Spacer(modifier = Modifier.height(8.dp))
                 network?.let { net ->
                     InfoRow("Frequency", "${net.frequency} MHz")
-                    if (net.channel > 0) {
-                        InfoRow("Channel", "${net.channel} (Width: ${net.channelWidth} MHz)")
-                    }
                     InfoRow("Security", net.capabilities)
-                    InfoRow("First Seen", formatTimestamp(net.firstSeen))
-                    InfoRow("Last Seen", formatTimestamp(net.lastSeen))
+                    sightings.firstOrNull()?.let { firstSighting ->
+                        InfoRow("First Seen", formatTimestamp(firstSighting.timestamp))
+                    }
+                    sightings.lastOrNull()?.let { lastSighting ->
+                        InfoRow("Last Seen", formatTimestamp(lastSighting.timestamp))
+                    }
                 }
             }
         }

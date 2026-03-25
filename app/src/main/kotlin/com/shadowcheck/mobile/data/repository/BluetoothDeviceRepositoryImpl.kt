@@ -1,10 +1,10 @@
 package com.shadowcheck.mobile.data.repository
 
 import com.shadowcheck.mobile.core.di.IoDispatcher
+import com.shadowcheck.mobile.core.model.BluetoothDevice
 import com.shadowcheck.mobile.data.database.dao.BluetoothDeviceDao
 import com.shadowcheck.mobile.data.database.model.toDomainModel
 import com.shadowcheck.mobile.data.database.model.toEntity
-import com.shadowcheck.mobile.domain.model.BluetoothDevice
 import com.shadowcheck.mobile.domain.repository.BluetoothDeviceRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
@@ -26,8 +26,8 @@ class BluetoothDeviceRepositoryImpl @Inject constructor(
         }.flowOn(dispatcher)
     }
 
-    override fun getDeviceByMacAddress(mac: String): Flow<BluetoothDevice?> {
-        return bluetoothDao.getDeviceByMacAddress(mac).map { it?.toDomainModel() }.flowOn(dispatcher)
+    override fun getDeviceByMacAddress(macAddress: String): Flow<BluetoothDevice?> {
+        return bluetoothDao.getDeviceByMacAddress(macAddress).map { it?.toDomainModel() }.flowOn(dispatcher)
     }
 
     override suspend fun insertDevice(device: BluetoothDevice): Long = withContext(dispatcher) {
@@ -40,8 +40,8 @@ class BluetoothDeviceRepositoryImpl @Inject constructor(
         bluetoothDao.updateDevice(deviceWithTimestamp)
     }
 
-    override suspend fun deleteDevice(mac: String) = withContext(dispatcher) {
-        bluetoothDao.deleteDevice(mac)
+    override suspend fun deleteDevice(device: BluetoothDevice) = withContext(dispatcher) {
+        bluetoothDao.deleteDevice(device.macAddress)
     }
 
     override fun getNearbyDevices(rssiThreshold: Int): Flow<List<BluetoothDevice>> {

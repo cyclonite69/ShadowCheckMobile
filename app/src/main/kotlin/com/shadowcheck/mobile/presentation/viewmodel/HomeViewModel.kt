@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.shadowcheck.mobile.domain.usecase.GetAllBluetoothDevicesUseCase
 import com.shadowcheck.mobile.domain.usecase.GetAllCellularTowersUseCase
-import com.shadowcheck.mobile.domain.usecase.GetAllWifiNetworksUseCase
+import com.shadowcheck.mobile.wifi.domain.usecase.GetAllWifiNetworksUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject

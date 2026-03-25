@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.shadowcheck.mobile.presentation.viewmodel.BluetoothListViewModel
 import com.shadowcheck.mobile.rebuilt.presentation.theme.ShadowCheckColors
+import com.shadowcheck.mobile.core.model.BluetoothDevice
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,13 +47,13 @@ fun BluetoothListScreen(
 }
 
 @Composable
-fun BluetoothCard(device: com.shadowcheck.mobile.domain.model.BluetoothDevice, sightings: Int) {
+fun BluetoothCard(device: BluetoothDevice, sightings: Int) {
     Card(
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
         colors = CardDefaults.cardColors(containerColor = ShadowCheckColors.Surface)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Text(device.name?.ifBlank { "Unknown Device" } ?: "Unknown Device", fontWeight = FontWeight.Bold, color = Color.White)
+            Text(device.name.ifBlank { "Unknown Device" }, fontWeight = FontWeight.Bold, color = Color.White)
             Text(device.macAddress, fontSize = 12.sp, color = ShadowCheckColors.TextSecondary)
             Text("$sightings sightings", fontSize = 10.sp, color = ShadowCheckColors.Accent)
         }

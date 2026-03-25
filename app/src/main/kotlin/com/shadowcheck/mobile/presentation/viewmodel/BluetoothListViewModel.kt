@@ -2,7 +2,7 @@ package com.shadowcheck.mobile.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.shadowcheck.mobile.domain.model.BluetoothDevice
+import com.shadowcheck.mobile.core.model.BluetoothDevice
 import com.shadowcheck.mobile.domain.usecase.GetAllBluetoothDevicesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*

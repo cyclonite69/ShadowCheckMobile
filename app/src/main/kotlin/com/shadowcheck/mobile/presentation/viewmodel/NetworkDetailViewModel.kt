@@ -3,10 +3,10 @@ package com.shadowcheck.mobile.presentation.viewmodel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.shadowcheck.mobile.core.model.WifiNetwork
-import com.shadowcheck.mobile.domain.repository.WifiNetworkRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
+import com.shadowcheck.mobile.wifi.domain.repository.WifiNetworkRepository
+import com.shadowcheck.mobile.wifi.model.WifiNetwork
 import javax.inject.Inject
 
 data class NetworkDetailUiState(
