@@ -1,8 +1,8 @@
 package com.shadowcheck.mobile.utils
 
-import com.shadowcheck.mobile.data.BluetoothDevice
-import com.shadowcheck.mobile.data.CellularTower
-import com.shadowcheck.mobile.data.WifiNetwork
+import com.shadowcheck.mobile.core.model.BluetoothDevice
+import com.shadowcheck.mobile.core.model.CellularTower
+import com.shadowcheck.mobile.core.model.WifiNetwork
 import java.io.File
 
 object ExportUtils {
@@ -24,7 +24,7 @@ object ExportUtils {
             
             // Bluetooth data
             btDevices.forEach { device ->
-                writer.write("Bluetooth,${device.address},${device.name ?: ""},${device.rssi},,${device.latitude},${device.longitude},${device.timestamp}\n")
+                writer.write("Bluetooth,${device.macAddress},${device.name},${device.rssi},,${device.latitude},${device.longitude},${device.timestamp}\n")
             }
             
             // Cellular data
@@ -66,8 +66,8 @@ object ExportUtils {
             btDevices.filter { it.latitude != 0.0 && it.longitude != 0.0 }.forEach { device ->
                 writer.write("""
                     <Placemark>
-                        <name>${escapeXml(device.name ?: "Unknown")}</name>
-                        <description>Address: ${device.address}, RSSI: ${device.rssi} dBm</description>
+                        <name>${escapeXml(device.name.ifBlank { "Unknown" })}</name>
+                        <description>Address: ${device.macAddress}, RSSI: ${device.rssi} dBm</description>
                         <Point><coordinates>${device.longitude},${device.latitude},0</coordinates></Point>
                     </Placemark>
                 """.trimIndent())
@@ -115,7 +115,7 @@ object ExportUtils {
             btDevices.filter { it.latitude != 0.0 && it.longitude != 0.0 }.forEach { device ->
                 features.add("""
                     {"type":"Feature","geometry":{"type":"Point","coordinates":[${device.longitude},${device.latitude}]},
-                    "properties":{"type":"Bluetooth","name":"${escapeJson(device.name ?: "")}","address":"${device.address}",
+                    "properties":{"type":"Bluetooth","name":"${escapeJson(device.name)}","address":"${device.macAddress}",
                     "rssi":${device.rssi}}}
                 """.trimIndent())
             }

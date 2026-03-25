@@ -12,17 +12,46 @@ import android.os.*
 import android.telephony.*
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
-import androidx.room.Room
-import com.shadowcheck.mobile.data.*
+import com.shadowcheck.mobile.core.model.CellularTower
+import com.shadowcheck.mobile.core.model.BleDevice
+import com.shadowcheck.mobile.core.model.BluetoothDevice
+import com.shadowcheck.mobile.domain.repository.BleDeviceRepository
+import com.shadowcheck.mobile.domain.repository.BluetoothDeviceRepository
+import com.shadowcheck.mobile.domain.repository.CellularTowerRepository
+import com.shadowcheck.mobile.domain.repository.HardwareMetadataRepository
+import com.shadowcheck.mobile.domain.repository.SensorReadingRepository
+import com.shadowcheck.mobile.wifi.domain.repository.WifiNetworkRepository
+import com.shadowcheck.mobile.wifi.model.WifiNetwork
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.first
 
+@AndroidEntryPoint
 class CompleteScannerService : Service() {
+    @Inject
+    lateinit var wifiNetworkRepository: WifiNetworkRepository
+
+    @Inject
+    lateinit var bleDeviceRepository: BleDeviceRepository
+
+    @Inject
+    lateinit var bluetoothDeviceRepository: BluetoothDeviceRepository
+
+    @Inject
+    lateinit var cellularTowerRepository: CellularTowerRepository
+
+    @Inject
+    lateinit var sensorReadingRepository: SensorReadingRepository
+
+    @Inject
+    lateinit var hardwareMetadataRepository: HardwareMetadataRepository
+
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var wifiManager: WifiManager? = null
     private var bluetoothAdapter: android.bluetooth.BluetoothAdapter? = null
     private var telephonyManager: TelephonyManager? = null
     private var locationManager: LocationManager? = null
-    private var database: ShadowCheckDatabase? = null
     private var sensorService: SensorCollectionService? = null
     
     private var isScanning = false
@@ -45,36 +74,50 @@ class CompleteScannerService : Service() {
             
             wifiManager?.scanResults?.forEach { result ->
                 scope.launch {
-                    val existing = database?.wifiNetworkDao()?.getByBssid(result.BSSID)
+                    val existing = wifiNetworkRepository
+                        .getNetworksByBssid(result.BSSID)
+                        .first()
+                        .maxByOrNull { it.timestamp }
                     val now = System.currentTimeMillis()
                     
                     // 30-second deduplication
-                    if (existing == null || (now - existing.lastSeen) >= 30000) {
+                    if (existing == null || (now - existing.timestamp) >= 30000) {
                         wifiTotalCount++
                         if (existing == null) wifiUniqueCount++
                         
-                        database?.wifiNetworkDao()?.insert(WifiNetwork(
-                            bssid = result.BSSID,
-                            ssid = result.SSID ?: "",
-                            frequency = result.frequency,
-                            signalLevel = result.level,
-                            capabilities = result.capabilities ?: "",
-                            channel = getChannelFromFreq(result.frequency),
-                            channelWidth = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) result.channelWidth else 0,
-                            centerFreq0 = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) result.centerFreq0 else 0,
-                            centerFreq1 = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) result.centerFreq1 else 0,
-                            is80211mc = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) result.is80211mcResponder else false,
-                            isPasspoint = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) result.isPasspointNetwork else false,
-                            operatorFriendlyName = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) result.operatorFriendlyName?.toString() ?: "" else "",
-                            venueName = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) result.venueName?.toString() ?: "" else "",
-                            latitude = currentLat,
-                            longitude = currentLon,
-                            altitude = currentAlt,
-                            accuracy = currentAccuracy,
-                            timestamp = now,
-                            firstSeen = existing?.firstSeen ?: now,
-                            lastSeen = now
-                        ))
+                        wifiNetworkRepository.insertNetwork(
+                            WifiNetwork(
+                                ssid = result.SSID ?: "",
+                                bssid = result.BSSID,
+                                capabilities = result.capabilities ?: "",
+                                frequency = result.frequency,
+                                signalLevel = result.level,
+                                timestamp = now,
+                                latitude = currentLat,
+                                longitude = currentLon,
+                                channel = getChannelFromFreq(result.frequency),
+                                channelWidth = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) result.channelWidth else 0,
+                                centerFreq0 = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) result.centerFreq0 else 0,
+                                centerFreq1 = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) result.centerFreq1 else 0,
+                                is80211mc = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) result.is80211mcResponder else false,
+                                isPasspoint = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) result.isPasspointNetwork else false,
+                                operatorFriendlyName = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                    result.operatorFriendlyName?.toString() ?: ""
+                                } else {
+                                    ""
+                                },
+                                venueName = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                    result.venueName?.toString() ?: ""
+                                } else {
+                                    ""
+                                },
+                                altitude = currentAlt,
+                                accuracy = currentAccuracy,
+                                firstSeen = existing?.firstSeen ?: now,
+                                lastSeen = now,
+                                source = "complete_scanner"
+                            )
+                        )
                         updateNotification()
                     }
                 }
@@ -87,7 +130,9 @@ class CompleteScannerService : Service() {
             if (!hasValidLocation) return
             
             scope.launch {
-                val existing = database?.bleDeviceDao()?.getByAddress(result.device.address)
+                val existing = bleDeviceRepository
+                    .getDeviceByMacAddress(result.device.address)
+                    .first()
                 val now = System.currentTimeMillis()
                 
                 // Get name from device or scan record
@@ -98,10 +143,11 @@ class CompleteScannerService : Service() {
                     btTotalCount++
                     if (existing == null) btUniqueCount++
                     
-                    database?.bleDeviceDao()?.insert(BleDevice(
-                        address = result.device.address,
-                        name = deviceName,
+                    bleDeviceRepository.insertDevice(BleDevice(
+                        macAddress = result.device.address,
+                        name = deviceName.orEmpty(),
                         rssi = result.rssi,
+                        timestamp = now,
                         txPower = result.txPower,
                         isConnectable = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) result.isConnectable else false,
                         serviceUuids = result.scanRecord?.serviceUuids?.joinToString(",") ?: "",
@@ -110,9 +156,9 @@ class CompleteScannerService : Service() {
                         longitude = currentLon,
                         altitude = currentAlt,
                         accuracy = currentAccuracy,
-                        timestamp = now,
                         firstSeen = existing?.firstSeen ?: now,
-                        lastSeen = now
+                        lastSeen = now,
+                        source = "complete_scanner"
                     ))
                     updateNotification()
                 }
@@ -130,27 +176,30 @@ class CompleteScannerService : Service() {
                     
                     device?.let {
                         scope.launch {
-                            val existing = database?.bluetoothDeviceDao()?.getByAddress(it.address)
+                            val existing = bluetoothDeviceRepository
+                                .getDeviceByMacAddress(it.address)
+                                .first()
                             val now = System.currentTimeMillis()
                             
-                            if (existing == null || (now - existing.lastSeen) >= 30000) {
+                            if (existing == null || (now - existing.timestamp) >= 30000) {
                                 btTotalCount++
                                 if (existing == null) btUniqueCount++
                                 
-                                database?.bluetoothDeviceDao()?.insert(BluetoothDevice(
-                                    address = it.address,
+                                bluetoothDeviceRepository.insertDevice(BluetoothDevice(
+                                    macAddress = it.address,
                                     name = it.name,
                                     rssi = rssi,
-                                    deviceClass = it.bluetoothClass?.deviceClass ?: 0,
-                                    bondState = it.bondState,
                                     deviceType = it.type,
+                                    timestamp = now,
                                     latitude = currentLat,
                                     longitude = currentLon,
+                                    deviceClass = it.bluetoothClass?.deviceClass ?: 0,
+                                    bondState = it.bondState,
                                     altitude = currentAlt,
                                     accuracy = currentAccuracy,
-                                    timestamp = now,
                                     firstSeen = existing?.firstSeen ?: now,
-                                    lastSeen = now
+                                    lastSeen = now,
+                                    source = "complete_scanner"
                                 ))
                                 updateNotification()
                             }
@@ -182,8 +231,11 @@ class CompleteScannerService : Service() {
         bluetoothAdapter = (getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter
         telephonyManager = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        database = Room.databaseBuilder(this, ShadowCheckDatabase::class.java, "shadowcheck.db").build()
-        sensorService = SensorCollectionService(this)
+        sensorService = SensorCollectionService(
+            context = this,
+            sensorReadingRepository = sensorReadingRepository,
+            hardwareMetadataRepository = hardwareMetadataRepository
+        )
         createNotificationChannel()
     }
     
@@ -253,55 +305,65 @@ class CompleteScannerService : Service() {
                     when (cellInfo) {
                         is CellInfoGsm -> {
                             val identity = cellInfo.cellIdentity
-                            val existing = database?.cellularTowerDao()?.getByCellId(identity.cid)
+                            val existing = cellularTowerRepository
+                                .getTowerByCellId(identity.cid)
+                                .first()
                             
                             // 30-second deduplication
                             if (existing == null || (now - existing.lastSeen) >= 30000) {
                                 cellTotalCount++
                                 if (existing == null) cellUniqueCount++
                                 
-                                database?.cellularTowerDao()?.insert(CellularTower(
+                                cellularTowerRepository.insertTower(CellularTower(
                                     cellId = identity.cid,
                                     lac = identity.lac,
                                     mcc = identity.mcc,
                                     mnc = identity.mnc,
                                     signalStrength = cellInfo.cellSignalStrength.level,
+                                    signalQuality = cellInfo.cellSignalStrength.dbm,
                                     networkType = "GSM",
+                                    operatorName = telephonyManager?.networkOperatorName ?: "",
                                     latitude = currentLat,
                                     longitude = currentLon,
                                     altitude = currentAlt,
                                     accuracy = currentAccuracy,
                                     timestamp = now,
                                     firstSeen = existing?.firstSeen ?: now,
-                                    lastSeen = now
+                                    lastSeen = now,
+                                    source = "complete_scanner"
                                 ))
                                 updateNotification()
                             }
                         }
                         is CellInfoLte -> {
                             val identity = cellInfo.cellIdentity
-                            val existing = database?.cellularTowerDao()?.getByCellId(identity.ci)
+                            val existing = cellularTowerRepository
+                                .getTowerByCellId(identity.ci)
+                                .first()
                             
                             // 30-second deduplication
                             if (existing == null || (now - existing.lastSeen) >= 30000) {
                                 cellTotalCount++
                                 if (existing == null) cellUniqueCount++
                                 
-                                database?.cellularTowerDao()?.insert(CellularTower(
+                                cellularTowerRepository.insertTower(CellularTower(
                                     cellId = identity.ci,
                                     lac = identity.tac,
                                     mcc = identity.mcc,
                                     mnc = identity.mnc,
                                     psc = identity.pci,
                                     signalStrength = cellInfo.cellSignalStrength.level,
+                                    signalQuality = cellInfo.cellSignalStrength.dbm,
                                     networkType = "LTE",
+                                    operatorName = telephonyManager?.networkOperatorName ?: "",
                                     latitude = currentLat,
                                     longitude = currentLon,
                                     altitude = currentAlt,
                                     accuracy = currentAccuracy,
                                     timestamp = now,
                                     firstSeen = existing?.firstSeen ?: now,
-                                    lastSeen = now
+                                    lastSeen = now,
+                                    source = "complete_scanner"
                                 ))
                                 updateNotification()
                             }

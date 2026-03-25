@@ -4,8 +4,12 @@ import android.content.Context
 import androidx.room.Room
 import androidx.room.migration.Migration
 import com.shadowcheck.mobile.data.database.AppDatabase
+import com.shadowcheck.mobile.data.database.dao.BleDeviceDao
 import com.shadowcheck.mobile.data.database.dao.BluetoothDeviceDao
 import com.shadowcheck.mobile.data.database.dao.CellularTowerDao
+import com.shadowcheck.mobile.data.database.dao.GeofenceDao
+import com.shadowcheck.mobile.data.database.dao.HardwareMetadataDao
+import com.shadowcheck.mobile.data.database.dao.SensorReadingDao
 import com.shadowcheck.mobile.data.database.dao.WifiNetworkDao
 import dagger.Module
 import dagger.Provides
@@ -46,7 +50,27 @@ object DatabaseModule {
     }
 
     @Provides
+    fun provideBleDeviceDao(database: AppDatabase): BleDeviceDao {
+        return database.bleDeviceDao()
+    }
+
+    @Provides
     fun provideCellularTowerDao(database: AppDatabase): CellularTowerDao {
         return database.cellularTowerDao()
+    }
+
+    @Provides
+    fun provideGeofenceDao(database: AppDatabase): GeofenceDao {
+        return database.geofenceDao()
+    }
+
+    @Provides
+    fun provideSensorReadingDao(database: AppDatabase): SensorReadingDao {
+        return database.sensorReadingDao()
+    }
+
+    @Provides
+    fun provideHardwareMetadataDao(database: AppDatabase): HardwareMetadataDao {
+        return database.hardwareMetadataDao()
     }
 }

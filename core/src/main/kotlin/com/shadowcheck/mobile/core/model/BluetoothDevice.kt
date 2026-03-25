@@ -7,5 +7,12 @@ data class BluetoothDevice(
     val timestamp: Long,
     val deviceType: Int = 0,
     val latitude: Double = 0.0,
-    val longitude: Double = 0.0
+    val longitude: Double = 0.0,
+    val deviceClass: Int = 0,
+    val bondState: Int = 0,
+    val altitude: Double = 0.0,
+    val accuracy: Float = 0f,
+    val firstSeen: Long = timestamp,
+    val lastSeen: Long = timestamp,
+    val source: String = ""
 )

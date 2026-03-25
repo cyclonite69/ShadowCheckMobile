@@ -128,18 +128,32 @@ class NetworkMonitorService(
     }
     
     private suspend fun saveWiFiConnection(wifiInfo: WifiInfo) {
+        val now = System.currentTimeMillis()
         val network = WifiNetwork(
             ssid = wifiInfo.ssid ?: "",
             bssid = wifiInfo.bssid ?: return,
             capabilities = "",
             frequency = wifiInfo.frequency,
             signalLevel = wifiInfo.rssi,
-            timestamp = System.currentTimeMillis(),
+            timestamp = now,
             latitude = 0.0,
-            longitude = 0.0
+            longitude = 0.0,
+            channel = getChannelFromFreq(wifiInfo.frequency),
+            maxDataRate = wifiInfo.linkSpeed,
+            firstSeen = now,
+            lastSeen = now,
+            source = "network_callback"
         )
         
         wifiNetworkRepository.insertNetwork(network)
+    }
+
+    private fun getChannelFromFreq(freq: Int): Int {
+        return when (freq) {
+            in 2412..2484 -> (freq - 2407) / 5
+            in 5170..5825 -> (freq - 5000) / 5
+            else -> 0
+        }
     }
     
     private suspend fun detectDeauthAttack(reason: Int, reasonText: String) {

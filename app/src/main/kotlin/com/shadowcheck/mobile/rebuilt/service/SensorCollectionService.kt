@@ -7,17 +7,21 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.location.Location
 import android.os.Build
-import com.shadowcheck.mobile.data.HardwareMetadata
-import com.shadowcheck.mobile.data.SensorReading
-import com.shadowcheck.mobile.data.ShadowCheckDatabase
+import com.shadowcheck.mobile.core.model.HardwareMetadata
+import com.shadowcheck.mobile.core.model.SensorReading
+import com.shadowcheck.mobile.domain.repository.HardwareMetadataRepository
+import com.shadowcheck.mobile.domain.repository.SensorReadingRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.net.NetworkInterface
 
-class SensorCollectionService(private val context: Context) : SensorEventListener {
+class SensorCollectionService(
+    private val context: Context,
+    private val sensorReadingRepository: SensorReadingRepository,
+    private val hardwareMetadataRepository: HardwareMetadataRepository
+) : SensorEventListener {
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
-    private val database = ShadowCheckDatabase.getDatabase(context)
     private val scope = CoroutineScope(Dispatchers.IO)
     
     private var currentLocation: Location? = null
@@ -98,7 +102,7 @@ class SensorCollectionService(private val context: Context) : SensorEventListene
         )
         
         scope.launch {
-            database.sensorReadingDao().insert(reading)
+            sensorReadingRepository.insertReading(reading)
         }
     }
     
@@ -107,7 +111,7 @@ class SensorCollectionService(private val context: Context) : SensorEventListene
     private fun captureDeviceHardware() {
         scope.launch {
             val macAddress = getMacAddress()
-            val existing = database.hardwareMetadataDao().getByMac(macAddress)
+            val existing = hardwareMetadataRepository.getByMac(macAddress)
             
             if (existing == null || System.currentTimeMillis() - existing.lastUpdated > 86400000) {
                 val metadata = HardwareMetadata(
@@ -119,7 +123,7 @@ class SensorCollectionService(private val context: Context) : SensorEventListene
                     notes = buildDeviceSpecs(),
                     lastUpdated = System.currentTimeMillis()
                 )
-                database.hardwareMetadataDao().insert(metadata)
+                hardwareMetadataRepository.upsert(metadata)
             }
         }
     }
