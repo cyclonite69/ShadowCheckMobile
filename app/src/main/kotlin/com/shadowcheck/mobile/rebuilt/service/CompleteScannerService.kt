@@ -56,10 +56,12 @@ class CompleteScannerService : Service() {
     private var locationManager: LocationManager? = null
     private var sensorService: SensorCollectionService? = null
     private var wakeLock: PowerManager.WakeLock? = null
+    private var powerManager: PowerManager? = null
     private var highPerformanceMode = false
     private var wifiScanIntervalMs = BALANCED_WIFI_SCAN_INTERVAL_MS
     private var bluetoothScanIntervalMs = BALANCED_BLUETOOTH_SCAN_INTERVAL_MS
     private var cellularScanIntervalMs = BALANCED_CELLULAR_SCAN_INTERVAL_MS
+    private var currentThrottleMultiplier = 1
     
     private var isScanning = false
     private var currentLat = 0.0
@@ -87,6 +89,8 @@ class CompleteScannerService : Service() {
     private var lastFlushStartedAt = 0L
     private var lastFlushCompletedAt = 0L
     private var lastFlushDurationMs = 0L
+    private var isCharging = false
+    private var isPowerSaveMode = false
     
     private val wifiReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -269,13 +273,14 @@ class CompleteScannerService : Service() {
             hardwareMetadataRepository = hardwareMetadataRepository,
             highPerformanceMode = highPerformanceMode
         )
-        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
-        wakeLock = powerManager.newWakeLock(
+        powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        wakeLock = powerManager?.newWakeLock(
             PowerManager.PARTIAL_WAKE_LOCK,
             "ShadowCheck:CompleteScannerWakeLock"
-        ).apply {
+        )?.apply {
             setReferenceCounted(false)
         }
+        refreshPowerState()
         createNotificationChannel()
     }
     
@@ -328,7 +333,7 @@ class CompleteScannerService : Service() {
                 if (hasValidLocation) {
                     scanWiFi()
                 }
-                delay(wifiScanIntervalMs)
+                delay(wifiScanIntervalMs * currentThrottleMultiplier)
             }
         }
 
@@ -337,7 +342,7 @@ class CompleteScannerService : Service() {
                 if (hasValidLocation) {
                     scanBluetooth()
                 }
-                delay(bluetoothScanIntervalMs)
+                delay(bluetoothScanIntervalMs * currentThrottleMultiplier)
             }
         }
 
@@ -346,7 +351,7 @@ class CompleteScannerService : Service() {
                 if (hasValidLocation) {
                     scanCellular()
                 }
-                delay(cellularScanIntervalMs)
+                delay(cellularScanIntervalMs * currentThrottleMultiplier)
             }
         }
     }
@@ -544,7 +549,39 @@ class CompleteScannerService : Service() {
         flushCellularTowers()
         lastFlushCompletedAt = System.currentTimeMillis()
         lastFlushDurationMs = lastFlushCompletedAt - lastFlushStartedAt
+        refreshPowerState()
+        updateAdaptiveThrottle()
         updateMetricsSnapshot()
+    }
+
+    private fun updateAdaptiveThrottle() {
+        val wifiUtil = pendingWifiNetworks.size.toFloat() / WIFI_QUEUE_LIMIT
+        val bleUtil = pendingBleDevices.size.toFloat() / BLE_QUEUE_LIMIT
+        val btUtil = pendingBluetoothDevices.size.toFloat() / BT_QUEUE_LIMIT
+        val cellUtil = pendingCellularTowers.size.toFloat() / CELL_QUEUE_LIMIT
+        val maxQueueUtil = maxOf(wifiUtil, bleUtil, btUtil, cellUtil)
+
+        val pressureThrottle = when {
+            lastFlushDurationMs >= 400L || maxQueueUtil >= 0.8f -> 3
+            lastFlushDurationMs >= 150L || maxQueueUtil >= 0.5f -> 2
+            else -> 1
+        }
+
+        val environmentThrottle = when {
+            isPowerSaveMode && !isCharging -> 2
+            else -> 1
+        }
+
+        currentThrottleMultiplier = maxOf(pressureThrottle, environmentThrottle)
+    }
+
+    private fun refreshPowerState() {
+        isPowerSaveMode = powerManager?.isPowerSaveMode == true
+
+        val batteryStatus = registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+        val status = batteryStatus?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
+        isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                status == BatteryManager.BATTERY_STATUS_FULL
     }
 
     private fun updateMetricsSnapshot() {
@@ -620,6 +657,9 @@ class CompleteScannerService : Service() {
                         "BT: $btUniqueCount/$btTotalCount(${pendingBleDevices.size + pendingBluetoothDevices.size}) " +
                         "Cell: $cellUniqueCount/$cellTotalCount(${pendingCellularTowers.size}) " +
                         "Flush:${lastFlushDurationMs}ms " +
+                        "x${currentThrottleMultiplier} " +
+                        (if (isCharging) "CHG " else "BAT ") +
+                        (if (isPowerSaveMode) "PS " else "") +
                         if (highPerformanceMode) "HP" else "BAL"
             )
             .setSmallIcon(android.R.drawable.ic_menu_search)
