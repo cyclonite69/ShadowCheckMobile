@@ -20,21 +20,22 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
-import com.shadowcheck.mobile.data.ShadowCheckDatabase
+import com.shadowcheck.mobile.presentation.viewmodel.PurgeState
+import com.shadowcheck.mobile.presentation.viewmodel.SettingsViewModel
 import com.shadowcheck.mobile.rebuilt.presentation.theme.ShadowCheckColors
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(onBack: () -> Unit = {}) {
+fun SettingsScreen(
+    onBack: () -> Unit = {},
+    viewModel: SettingsViewModel = hiltViewModel()
+) {
     val context = LocalContext.current
     val encryptedPrefs = getEncryptedPrefs(context)
-    val database = ShadowCheckDatabase.getDatabase(context)
-    val scope = rememberCoroutineScope()
+    val purgeState by viewModel.purgeState.collectAsState()
     
     var mapProvider by remember { mutableStateOf(encryptedPrefs.getString("map_provider", "Mapbox") ?: "Mapbox") }
     var scanInterval by remember { mutableStateOf(encryptedPrefs.getInt("scan_interval", 3)) }
@@ -43,6 +44,19 @@ fun SettingsScreen(onBack: () -> Unit = {}) {
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showClearDialog by remember { mutableStateOf(false) }
     var showApiKeysDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(purgeState) {
+        when (val state = purgeState) {
+            PurgeState.Idle -> Unit
+            PurgeState.InProgress -> Unit
+            PurgeState.Success -> {
+                Toast.makeText(context, "Sensor data purged", Toast.LENGTH_SHORT).show()
+            }
+            is PurgeState.Error -> {
+                Toast.makeText(context, state.msg, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
     
     Column(
         modifier = Modifier.fillMaxSize().background(ShadowCheckColors.Background)
@@ -166,21 +180,17 @@ fun SettingsScreen(onBack: () -> Unit = {}) {
             Spacer(modifier = Modifier.height(8.dp))
             
             Button(
-                onClick = { 
-                    scope.launch {
-                        database.sensorReadingDao().deleteAll()
-                        withContext(Dispatchers.Main) {
-                            Toast.makeText(context, "Sensor data purged", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                },
+                onClick = { viewModel.purgeSensorData() },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800)),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Icon(Icons.Default.Delete, "Purge")
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Purge Sensor Data")
+                Text(
+                    if (purgeState is PurgeState.InProgress) "Purging Sensor Data..."
+                    else "Purge Sensor Data"
+                )
             }
             
             Spacer(modifier = Modifier.height(8.dp))
