@@ -8,5 +8,6 @@ data class SensorReading(
     val accuracy: Int = 0,
     val latitude: Double,
     val longitude: Double,
-    val timestamp: Long
+    val timestamp: Long,
+    val eventTimestampNanos: Long = 0L
 )

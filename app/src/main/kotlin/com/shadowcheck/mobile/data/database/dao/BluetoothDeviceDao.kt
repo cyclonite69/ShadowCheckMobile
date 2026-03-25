@@ -15,6 +15,9 @@ interface BluetoothDeviceDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertDevice(device: BluetoothDeviceEntity): Long
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertDevices(devices: List<BluetoothDeviceEntity>)
+
     @Update
     suspend fun updateDevice(device: BluetoothDeviceEntity)
 

@@ -36,6 +36,10 @@ class BleDeviceRepositoryImpl @Inject constructor(
         bleDeviceDao.insertDevice(device.toEntity())
     }
 
+    override suspend fun insertDevices(devices: List<BleDevice>) = withContext(dispatcher) {
+        bleDeviceDao.insertDevices(devices.map { it.toEntity() })
+    }
+
     override suspend fun updateDevice(device: BleDevice) = withContext(dispatcher) {
         bleDeviceDao.updateDevice(device.toEntity())
     }

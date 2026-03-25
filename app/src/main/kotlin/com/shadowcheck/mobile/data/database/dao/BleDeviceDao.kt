@@ -19,6 +19,9 @@ interface BleDeviceDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertDevice(device: BleDeviceEntity): Long
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertDevices(devices: List<BleDeviceEntity>)
+
     @Update
     suspend fun updateDevice(device: BleDeviceEntity)
 

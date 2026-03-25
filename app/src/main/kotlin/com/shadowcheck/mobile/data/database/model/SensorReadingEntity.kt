@@ -14,7 +14,8 @@ data class SensorReadingEntity(
     val accuracy: Int = 0,
     val latitude: Double,
     val longitude: Double,
-    val timestamp: Long
+    val timestamp: Long,
+    val eventTimestampNanos: Long = 0L
 )
 
 fun SensorReadingEntity.toDomainModel(): SensorReading = SensorReading(
@@ -25,7 +26,8 @@ fun SensorReadingEntity.toDomainModel(): SensorReading = SensorReading(
     accuracy = accuracy,
     latitude = latitude,
     longitude = longitude,
-    timestamp = timestamp
+    timestamp = timestamp,
+    eventTimestampNanos = eventTimestampNanos
 )
 
 fun SensorReading.toEntity(): SensorReadingEntity = SensorReadingEntity(
@@ -36,5 +38,6 @@ fun SensorReading.toEntity(): SensorReadingEntity = SensorReadingEntity(
     accuracy = accuracy,
     latitude = latitude,
     longitude = longitude,
-    timestamp = timestamp
+    timestamp = timestamp,
+    eventTimestampNanos = eventTimestampNanos
 )

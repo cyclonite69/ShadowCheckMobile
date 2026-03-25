@@ -7,6 +7,7 @@ interface BleDeviceRepository {
     fun getAllDevices(): Flow<List<BleDevice>>
     fun getDeviceByMacAddress(macAddress: String): Flow<BleDevice?>
     suspend fun insertDevice(device: BleDevice): Long
+    suspend fun insertDevices(devices: List<BleDevice>)
     suspend fun updateDevice(device: BleDevice)
     suspend fun deleteDevice(device: BleDevice)
 }

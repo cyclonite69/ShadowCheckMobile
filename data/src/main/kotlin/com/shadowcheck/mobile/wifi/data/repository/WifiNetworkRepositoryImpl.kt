@@ -48,6 +48,10 @@ class WifiNetworkRepositoryImpl @Inject constructor(
         wifiDao.insertNetwork(network.toEntity())
     }
 
+    override suspend fun insertNetworks(networks: List<WifiNetwork>) = withContext(dispatcher) {
+        wifiDao.insertBatch(networks.map { it.toEntity() })
+    }
+
     override suspend fun updateNetwork(network: WifiNetwork) = withContext(dispatcher) {
         wifiDao.updateNetwork(network.toEntity())
     }

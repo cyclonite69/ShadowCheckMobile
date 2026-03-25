@@ -3,6 +3,7 @@ package com.shadowcheck.mobile.di
 import android.content.Context
 import androidx.room.Room
 import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.shadowcheck.mobile.data.database.AppDatabase
 import com.shadowcheck.mobile.data.database.dao.BleDeviceDao
 import com.shadowcheck.mobile.data.database.dao.BluetoothDeviceDao
@@ -22,6 +23,26 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
 
+    private val MIGRATION_1_2 = object : Migration(1, 2) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("ALTER TABLE cellular_towers ADD COLUMN rawDbm INTEGER")
+            database.execSQL("ALTER TABLE cellular_towers ADD COLUMN rawAsuLevel INTEGER")
+            database.execSQL("ALTER TABLE cellular_towers ADD COLUMN rsrp INTEGER")
+            database.execSQL("ALTER TABLE cellular_towers ADD COLUMN rsrq INTEGER")
+            database.execSQL("ALTER TABLE cellular_towers ADD COLUMN rssnr INTEGER")
+            database.execSQL("ALTER TABLE cellular_towers ADD COLUMN cqi INTEGER")
+            database.execSQL("ALTER TABLE cellular_towers ADD COLUMN timingAdvance INTEGER")
+        }
+    }
+
+    private val MIGRATION_2_3 = object : Migration(2, 3) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL(
+                "ALTER TABLE sensor_readings ADD COLUMN eventTimestampNanos INTEGER NOT NULL DEFAULT 0"
+            )
+        }
+    }
+
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
@@ -35,8 +56,7 @@ object DatabaseModule {
     }
 
     private fun getAllMigrations(): Array<Migration> {
-        // Placeholder for database migrations
-        return arrayOf()
+        return arrayOf(MIGRATION_1_2, MIGRATION_2_3)
     }
 
     @Provides

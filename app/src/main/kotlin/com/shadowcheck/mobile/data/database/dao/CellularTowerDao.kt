@@ -15,6 +15,9 @@ interface CellularTowerDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTower(tower: CellularTowerEntity): Long
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertTowers(towers: List<CellularTowerEntity>)
+
     @Update
     suspend fun updateTower(tower: CellularTowerEntity)
 }

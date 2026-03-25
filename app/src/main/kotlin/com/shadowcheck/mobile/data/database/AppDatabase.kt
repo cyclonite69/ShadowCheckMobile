@@ -27,7 +27,7 @@ import com.shadowcheck.mobile.data.database.model.WifiNetworkEntity
         SensorReadingEntity::class,
         HardwareMetadataEntity::class
     ],
-    version = 1,
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

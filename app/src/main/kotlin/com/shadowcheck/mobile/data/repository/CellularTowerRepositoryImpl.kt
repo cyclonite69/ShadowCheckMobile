@@ -48,6 +48,10 @@ class CellularTowerRepositoryImpl @Inject constructor(
         cellularTowerDao.insertTower(tower.toEntity())
     }
 
+    override suspend fun insertTowers(towers: List<CellularTower>) = withContext(dispatcher) {
+        cellularTowerDao.insertTowers(towers.map { it.toEntity() })
+    }
+
     override suspend fun updateTower(tower: CellularTower) = withContext(dispatcher) {
         cellularTowerDao.updateTower(tower.toEntity())
     }

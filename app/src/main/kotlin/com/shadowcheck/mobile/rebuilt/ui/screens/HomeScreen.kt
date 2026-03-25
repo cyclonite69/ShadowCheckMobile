@@ -148,6 +148,10 @@ private fun startScanner(context: Context, viewModel: HomeViewModel) {
     try {
         context.startForegroundService(Intent(context, com.shadowcheck.mobile.rebuilt.service.CompleteScannerService::class.java).apply {
             action = "START"
+            putExtra(
+                com.shadowcheck.mobile.rebuilt.service.CompleteScannerService.EXTRA_HIGH_PERFORMANCE,
+                true
+            )
         })
         viewModel.setScanning(true)
     } catch (e: Exception) {}

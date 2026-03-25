@@ -35,6 +35,14 @@ class BluetoothDeviceRepositoryImpl @Inject constructor(
         bluetoothDao.insertDevice(deviceWithTimestamp)
     }
 
+    override suspend fun insertDevices(devices: List<BluetoothDevice>) = withContext(dispatcher) {
+        bluetoothDao.insertDevices(
+            devices.map { device ->
+                device.toEntity().copy(timestamp = System.currentTimeMillis())
+            }
+        )
+    }
+
     override suspend fun updateDevice(device: BluetoothDevice) = withContext(dispatcher) {
         val deviceWithTimestamp = device.toEntity().copy(timestamp = System.currentTimeMillis())
         bluetoothDao.updateDevice(deviceWithTimestamp)

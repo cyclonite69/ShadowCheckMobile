@@ -33,4 +33,7 @@ interface WifiNetworkDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(networks: List<WifiNetworkEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertBatch(networks: List<WifiNetworkEntity>)
 }

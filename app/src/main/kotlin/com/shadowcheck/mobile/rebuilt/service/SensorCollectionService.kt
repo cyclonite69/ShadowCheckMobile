@@ -98,7 +98,8 @@ class SensorCollectionService(
             accuracy = event.accuracy,
             latitude = location.latitude,
             longitude = location.longitude,
-            timestamp = System.currentTimeMillis()
+            timestamp = System.currentTimeMillis(),
+            eventTimestampNanos = event.timestamp
         )
         
         scope.launch {
