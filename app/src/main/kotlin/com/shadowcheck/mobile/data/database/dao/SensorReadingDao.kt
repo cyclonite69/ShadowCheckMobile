@@ -14,6 +14,9 @@ interface SensorReadingDao {
     @Insert
     suspend fun insertReading(reading: SensorReadingEntity)
 
+    @Insert
+    suspend fun insertReadings(readings: List<SensorReadingEntity>)
+
     @Query("DELETE FROM sensor_readings WHERE timestamp < :cutoffTime")
     suspend fun deleteOlderThan(cutoffTime: Long)
 

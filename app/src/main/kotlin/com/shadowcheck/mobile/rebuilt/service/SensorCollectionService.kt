@@ -13,28 +13,51 @@ import com.shadowcheck.mobile.domain.repository.HardwareMetadataRepository
 import com.shadowcheck.mobile.domain.repository.SensorReadingRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.net.NetworkInterface
+import java.util.concurrent.ConcurrentLinkedQueue
 
 class SensorCollectionService(
     private val context: Context,
     private val sensorReadingRepository: SensorReadingRepository,
-    private val hardwareMetadataRepository: HardwareMetadataRepository
+    private val hardwareMetadataRepository: HardwareMetadataRepository,
+    private val highPerformanceMode: Boolean = false
 ) : SensorEventListener {
+    private companion object {
+        const val SENSOR_BATCH_FLUSH_INTERVAL_MS = 500L
+        const val SENSOR_BATCH_SIZE = 100
+        const val SENSOR_QUEUE_LIMIT = 2_000
+    }
+
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     private val scope = CoroutineScope(Dispatchers.IO)
     
     private var currentLocation: Location? = null
     private val sensorListeners = mutableMapOf<Int, Boolean>()
+    private val pendingSensorReadings = ConcurrentLinkedQueue<SensorReading>()
+    private var sensorFlushJob: Job? = null
+    private var droppedSensorReadings = 0
     
     fun start() {
         captureDeviceHardware()
         registerSensors()
+        sensorFlushJob = scope.launch {
+            while (true) {
+                flushPendingSensorReadings()
+                delay(SENSOR_BATCH_FLUSH_INTERVAL_MS)
+            }
+        }
     }
     
     fun stop() {
         sensorManager.unregisterListener(this)
         sensorListeners.clear()
+        sensorFlushJob?.cancel()
+        scope.launch {
+            flushPendingSensorReadings()
+        }
     }
     
     fun updateLocation(location: Location) {
@@ -42,6 +65,12 @@ class SensorCollectionService(
     }
     
     private fun registerSensors() {
+        val sensorDelay = if (highPerformanceMode) {
+            SensorManager.SENSOR_DELAY_GAME
+        } else {
+            SensorManager.SENSOR_DELAY_NORMAL
+        }
+
         val sensors = listOf(
             Sensor.TYPE_ACCELEROMETER,
             Sensor.TYPE_GYROSCOPE,
@@ -63,7 +92,7 @@ class SensorCollectionService(
                 sensorManager.registerListener(
                     this,
                     sensor,
-                    SensorManager.SENSOR_DELAY_NORMAL
+                    sensorDelay
                 )
                 sensorListeners[type] = true
             }
@@ -103,7 +132,33 @@ class SensorCollectionService(
         )
         
         scope.launch {
-            sensorReadingRepository.insertReading(reading)
+            enqueueSensorReading(reading)
+        }
+    }
+
+    private suspend fun enqueueSensorReading(reading: SensorReading) {
+        trimQueueIfNeeded()
+        pendingSensorReadings.add(reading)
+        if (pendingSensorReadings.size >= SENSOR_BATCH_SIZE) {
+            flushPendingSensorReadings()
+        }
+    }
+
+    private suspend fun flushPendingSensorReadings() {
+        val batch = mutableListOf<SensorReading>()
+        while (true) {
+            val reading = pendingSensorReadings.poll() ?: break
+            batch.add(reading)
+        }
+        if (batch.isNotEmpty()) {
+            sensorReadingRepository.insertReadings(batch)
+        }
+    }
+
+    private fun trimQueueIfNeeded() {
+        while (pendingSensorReadings.size >= SENSOR_QUEUE_LIMIT) {
+            if (pendingSensorReadings.poll() == null) break
+            droppedSensorReadings++
         }
     }
     

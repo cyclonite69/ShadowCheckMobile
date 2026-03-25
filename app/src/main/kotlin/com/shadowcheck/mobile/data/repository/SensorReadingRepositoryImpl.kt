@@ -30,6 +30,10 @@ class SensorReadingRepositoryImpl @Inject constructor(
         sensorReadingDao.insertReading(reading.toEntity())
     }
 
+    override suspend fun insertReadings(readings: List<SensorReading>) = withContext(dispatcher) {
+        sensorReadingDao.insertReadings(readings.map { it.toEntity() })
+    }
+
     override suspend fun deleteOlderThan(cutoffTime: Long) = withContext(dispatcher) {
         sensorReadingDao.deleteOlderThan(cutoffTime)
     }

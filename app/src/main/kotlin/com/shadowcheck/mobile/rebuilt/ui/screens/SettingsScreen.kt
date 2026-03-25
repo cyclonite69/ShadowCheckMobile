@@ -39,6 +39,9 @@ fun SettingsScreen(
     
     var mapProvider by remember { mutableStateOf(encryptedPrefs.getString("map_provider", "Mapbox") ?: "Mapbox") }
     var scanInterval by remember { mutableStateOf(encryptedPrefs.getInt("scan_interval", 3)) }
+    var highPerformanceMode by remember {
+        mutableStateOf(encryptedPrefs.getBoolean("scanner_high_performance", true))
+    }
     
     var showBackupDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -123,6 +126,40 @@ fun SettingsScreen(
                     activeTrackColor = Color(0xFF00BCD4)
                 )
             )
+        }
+
+        SettingsSection("Collection Mode") {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
+                    onClick = {
+                        highPerformanceMode = false
+                        encryptedPrefs.edit().putBoolean("scanner_high_performance", false).apply()
+                    },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (!highPerformanceMode) Color(0xFF00BCD4) else Color(0xFF424242)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Balanced")
+                }
+                Button(
+                    onClick = {
+                        highPerformanceMode = true
+                        encryptedPrefs.edit().putBoolean("scanner_high_performance", true).apply()
+                    },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (highPerformanceMode) Color(0xFFFF9800) else Color(0xFF424242)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("High Performance")
+                }
+            }
         }
         
         // Database

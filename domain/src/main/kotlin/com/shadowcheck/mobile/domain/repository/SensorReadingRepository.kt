@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.Flow
 interface SensorReadingRepository {
     fun getRecentReadings(): Flow<List<SensorReading>>
     suspend fun insertReading(reading: SensorReading)
+    suspend fun insertReadings(readings: List<SensorReading>)
     suspend fun deleteOlderThan(cutoffTime: Long)
     suspend fun deleteAll()
 }

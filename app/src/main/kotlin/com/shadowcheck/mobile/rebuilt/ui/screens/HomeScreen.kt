@@ -22,9 +22,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import com.shadowcheck.mobile.presentation.viewmodel.HomeViewModel
 import com.shadowcheck.mobile.rebuilt.presentation.theme.ShadowCheckColors
+import com.shadowcheck.mobile.rebuilt.service.CompleteScannerService
 import com.shadowcheck.mobile.ui.components.rainbowShimmer
+import kotlinx.coroutines.delay
 
 @Composable
 fun HomeScreen(
@@ -34,6 +38,7 @@ fun HomeScreen(
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
     var hasPermissions by remember { mutableStateOf(false) }
+    var liveCounts by remember { mutableStateOf(CompleteScannerService.getCounts(context)) }
     
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -56,6 +61,13 @@ fun HomeScreen(
             startScanner(context, viewModel)
         } else {
             permissionLauncher.launch(permissions)
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            liveCounts = CompleteScannerService.getCounts(context)
+            delay(1000)
         }
     }
     
@@ -113,11 +125,17 @@ fun HomeScreen(
         
         Row(
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 24.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Icon(Icons.Default.GpsFixed, "GPS", tint = ShadowCheckColors.Accent, modifier = Modifier.size(20.dp))
-            Spacer(modifier = Modifier.width(8.dp))
             Text("GPS: 3m", color = ShadowCheckColors.Accent, fontSize = 14.sp)
+            Text("Flush: ${liveCounts.lastFlushDurationMs}ms", color = ShadowCheckColors.Accent, fontSize = 12.sp)
+            Text(
+                "Drop W:${liveCounts.wifiDropped} B:${liveCounts.bleDropped + liveCounts.bluetoothDropped} C:${liveCounts.cellDropped}",
+                color = ShadowCheckColors.TextSecondary,
+                fontSize = 12.sp
+            )
         }
     }
 }
@@ -146,13 +164,28 @@ fun StatCard(icon: androidx.compose.ui.graphics.vector.ImageVector, unique: Int,
 
 private fun startScanner(context: Context, viewModel: HomeViewModel) {
     try {
+        val prefs = getScannerPrefs(context)
+        val highPerformanceMode = prefs.getBoolean("scanner_high_performance", true)
         context.startForegroundService(Intent(context, com.shadowcheck.mobile.rebuilt.service.CompleteScannerService::class.java).apply {
             action = "START"
             putExtra(
                 com.shadowcheck.mobile.rebuilt.service.CompleteScannerService.EXTRA_HIGH_PERFORMANCE,
-                true
+                highPerformanceMode
             )
         })
         viewModel.setScanning(true)
     } catch (e: Exception) {}
+}
+
+private fun getScannerPrefs(context: Context): android.content.SharedPreferences {
+    val masterKey = MasterKey.Builder(context)
+        .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+        .build()
+    return EncryptedSharedPreferences.create(
+        context,
+        "shadowcheck_settings",
+        masterKey,
+        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+    )
 }

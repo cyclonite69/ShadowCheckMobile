@@ -57,6 +57,9 @@ class CompleteScannerService : Service() {
     private var sensorService: SensorCollectionService? = null
     private var wakeLock: PowerManager.WakeLock? = null
     private var highPerformanceMode = false
+    private var wifiScanIntervalMs = BALANCED_WIFI_SCAN_INTERVAL_MS
+    private var bluetoothScanIntervalMs = BALANCED_BLUETOOTH_SCAN_INTERVAL_MS
+    private var cellularScanIntervalMs = BALANCED_CELLULAR_SCAN_INTERVAL_MS
     
     private var isScanning = false
     private var currentLat = 0.0
@@ -263,7 +266,8 @@ class CompleteScannerService : Service() {
         sensorService = SensorCollectionService(
             context = this,
             sensorReadingRepository = sensorReadingRepository,
-            hardwareMetadataRepository = hardwareMetadataRepository
+            hardwareMetadataRepository = hardwareMetadataRepository,
+            highPerformanceMode = highPerformanceMode
         )
         val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
         wakeLock = powerManager.newWakeLock(
@@ -277,6 +281,13 @@ class CompleteScannerService : Service() {
     
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         highPerformanceMode = intent?.getBooleanExtra(EXTRA_HIGH_PERFORMANCE, true) ?: true
+        configureScanCadence()
+        sensorService = SensorCollectionService(
+            context = this,
+            sensorReadingRepository = sensorReadingRepository,
+            hardwareMetadataRepository = hardwareMetadataRepository,
+            highPerformanceMode = highPerformanceMode
+        )
         when (intent?.action) {
             "START" -> {
                 startForeground(1, createNotification())
@@ -316,10 +327,26 @@ class CompleteScannerService : Service() {
             while (isScanning) {
                 if (hasValidLocation) {
                     scanWiFi()
+                }
+                delay(wifiScanIntervalMs)
+            }
+        }
+
+        scope.launch {
+            while (isScanning) {
+                if (hasValidLocation) {
                     scanBluetooth()
+                }
+                delay(bluetoothScanIntervalMs)
+            }
+        }
+
+        scope.launch {
+            while (isScanning) {
+                if (hasValidLocation) {
                     scanCellular()
                 }
-                delay(3000)
+                delay(cellularScanIntervalMs)
             }
         }
     }
@@ -439,6 +466,7 @@ class CompleteScannerService : Service() {
         runBlocking {
             flushPendingWrites()
         }
+        updateMetricsSnapshot()
         if (wakeLock?.isHeld == true) {
             wakeLock?.release()
         }
@@ -454,6 +482,7 @@ class CompleteScannerService : Service() {
     }
     
     private fun updateNotification() {
+        updateMetricsSnapshot()
         val notification = createNotification()
         val manager = getSystemService(NotificationManager::class.java)
         manager.notify(1, notification)
@@ -515,6 +544,24 @@ class CompleteScannerService : Service() {
         flushCellularTowers()
         lastFlushCompletedAt = System.currentTimeMillis()
         lastFlushDurationMs = lastFlushCompletedAt - lastFlushStartedAt
+        updateMetricsSnapshot()
+    }
+
+    private fun updateMetricsSnapshot() {
+        latestCounts = ScanCounts(
+            wifiUnique = wifiUniqueCount,
+            wifiTotal = wifiTotalCount,
+            btUnique = btUniqueCount,
+            btTotal = btTotalCount,
+            cellUnique = cellUniqueCount,
+            cellTotal = cellTotalCount,
+            isScanning = isScanning,
+            wifiDropped = wifiDroppedCount,
+            bleDropped = bleDroppedCount,
+            bluetoothDropped = bluetoothDroppedCount,
+            cellDropped = cellDroppedCount,
+            lastFlushDurationMs = lastFlushDurationMs
+        )
     }
 
     private suspend fun flushWifiNetworks() {
@@ -572,11 +619,24 @@ class CompleteScannerService : Service() {
                 "WiFi: $wifiUniqueCount/$wifiTotalCount(${pendingWifiNetworks.size}) " +
                         "BT: $btUniqueCount/$btTotalCount(${pendingBleDevices.size + pendingBluetoothDevices.size}) " +
                         "Cell: $cellUniqueCount/$cellTotalCount(${pendingCellularTowers.size}) " +
-                        "Flush:${lastFlushDurationMs}ms"
+                        "Flush:${lastFlushDurationMs}ms " +
+                        if (highPerformanceMode) "HP" else "BAL"
             )
             .setSmallIcon(android.R.drawable.ic_menu_search)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()
+    }
+
+    private fun configureScanCadence() {
+        if (highPerformanceMode) {
+            wifiScanIntervalMs = HIGH_PERF_WIFI_SCAN_INTERVAL_MS
+            bluetoothScanIntervalMs = HIGH_PERF_BLUETOOTH_SCAN_INTERVAL_MS
+            cellularScanIntervalMs = HIGH_PERF_CELLULAR_SCAN_INTERVAL_MS
+        } else {
+            wifiScanIntervalMs = BALANCED_WIFI_SCAN_INTERVAL_MS
+            bluetoothScanIntervalMs = BALANCED_BLUETOOTH_SCAN_INTERVAL_MS
+            cellularScanIntervalMs = BALANCED_CELLULAR_SCAN_INTERVAL_MS
+        }
     }
     
     private fun createNotificationChannel() {
@@ -655,11 +715,19 @@ class CompleteScannerService : Service() {
         private const val BLE_QUEUE_LIMIT = 1_000
         private const val BT_QUEUE_LIMIT = 500
         private const val CELL_QUEUE_LIMIT = 500
+        private const val BALANCED_WIFI_SCAN_INTERVAL_MS = 5_000L
+        private const val BALANCED_BLUETOOTH_SCAN_INTERVAL_MS = 6_000L
+        private const val BALANCED_CELLULAR_SCAN_INTERVAL_MS = 5_000L
+        private const val HIGH_PERF_WIFI_SCAN_INTERVAL_MS = 2_500L
+        private const val HIGH_PERF_BLUETOOTH_SCAN_INTERVAL_MS = 3_500L
+        private const val HIGH_PERF_CELLULAR_SCAN_INTERVAL_MS = 2_500L
         const val EXTRA_HIGH_PERFORMANCE = "high_performance"
 
+        @Volatile
+        private var latestCounts = ScanCounts(0, 0, 0, 0, 0, 0, false, 0, 0, 0, 0, 0)
+
         fun getCounts(context: Context): ScanCounts {
-            // Would use bound service in production
-            return ScanCounts(0, 0, 0, 0, 0, 0, false, 0, 0, 0, 0, 0)
+            return latestCounts
         }
     }
 }

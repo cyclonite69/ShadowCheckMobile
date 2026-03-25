@@ -16,7 +16,12 @@ data class HomeUiState(
     val btTotal: Int = 0,
     val cellUnique: Int = 0,
     val cellTotal: Int = 0,
-    val isScanning: Boolean = false
+    val isScanning: Boolean = false,
+    val wifiDropped: Int = 0,
+    val bleDropped: Int = 0,
+    val bluetoothDropped: Int = 0,
+    val cellDropped: Int = 0,
+    val lastFlushDurationMs: Long = 0
 )
 
 @HiltViewModel
