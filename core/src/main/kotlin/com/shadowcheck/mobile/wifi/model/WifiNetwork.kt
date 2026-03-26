@@ -7,6 +7,7 @@ data class WifiNetwork(
     val frequency: Int,
     val signalLevel: Int,
     val timestamp: Long,
+    val sessionId: String = "",
     val latitude: Double = 0.0,
     val longitude: Double = 0.0,
     val channel: Int = 0,

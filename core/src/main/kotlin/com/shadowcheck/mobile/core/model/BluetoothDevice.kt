@@ -5,6 +5,7 @@ data class BluetoothDevice(
     val name: String,
     val rssi: Int,
     val timestamp: Long,
+    val sessionId: String = "",
     val deviceType: Int = 0,
     val latitude: Double = 0.0,
     val longitude: Double = 0.0,

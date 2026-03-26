@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -121,22 +122,96 @@ fun HomeScreen(
                 StatCard(Icons.Default.Bluetooth, uiState.btUnique, uiState.btTotal, "Bluetooth") { onNavigate("bluetooth_list") }
                 StatCard(Icons.Default.CellTower, uiState.cellUnique, uiState.cellTotal, "Cellular") { onNavigate("cellular_list") }
             }
-        }
-        
-        Row(
-            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 24.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Icon(Icons.Default.GpsFixed, "GPS", tint = ShadowCheckColors.Accent, modifier = Modifier.size(20.dp))
-            Text("GPS: 3m", color = ShadowCheckColors.Accent, fontSize = 14.sp)
-            Text("Flush: ${liveCounts.lastFlushDurationMs}ms", color = ShadowCheckColors.Accent, fontSize = 12.sp)
-            Text(
-                "Drop W:${liveCounts.wifiDropped} B:${liveCounts.bleDropped + liveCounts.bluetoothDropped} C:${liveCounts.cellDropped}",
-                color = ShadowCheckColors.TextSecondary,
-                fontSize = 12.sp
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            DiagnosticsCard(
+                modifier = Modifier.fillMaxWidth(0.94f),
+                counts = liveCounts
             )
         }
+    }
+}
+
+@Composable
+private fun DiagnosticsCard(
+    modifier: Modifier = Modifier,
+    counts: com.shadowcheck.mobile.rebuilt.service.ScanCounts
+) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(containerColor = ShadowCheckColors.Surface.copy(alpha = 0.82f)),
+        shape = MaterialTheme.shapes.large
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Scanner Diagnostics",
+                    color = ShadowCheckColors.TextPrimary,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                val modeLabel = if (counts.highPerformanceMode) "High Performance" else "Balanced"
+                Text(
+                    text = "$modeLabel  x${counts.throttleMultiplier}",
+                    color = ShadowCheckColors.Accent,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            DiagnosticsRow(
+                "Power",
+                buildString {
+                    append(if (counts.isCharging) "Charging" else "Battery")
+                    if (counts.isPowerSaveMode) append("  •  Saver On")
+                }
+            )
+            DiagnosticsRow("Flush", "${counts.lastFlushDurationMs} ms")
+            DiagnosticsRow(
+                "Queue",
+                "W ${counts.wifiQueueDepth}  BLE ${counts.bleQueueDepth}  BT ${counts.bluetoothQueueDepth}  C ${counts.cellQueueDepth}"
+            )
+            DiagnosticsRow(
+                "Dropped",
+                "W ${counts.wifiDropped}  BLE ${counts.bleDropped}  BT ${counts.bluetoothDropped}  C ${counts.cellDropped}"
+            )
+            DiagnosticsRow(
+                "Cadence",
+                "W ${counts.wifiScanIntervalMs}ms  BT ${counts.bluetoothScanIntervalMs}ms  C ${counts.cellularScanIntervalMs}ms"
+            )
+        }
+    }
+}
+
+@Composable
+private fun DiagnosticsRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            color = ShadowCheckColors.TextSecondary,
+            fontSize = 12.sp
+        )
+        Text(
+            text = value,
+            color = ShadowCheckColors.TextPrimary,
+            fontSize = 12.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 

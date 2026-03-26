@@ -5,6 +5,7 @@ data class BleDevice(
     val name: String,
     val rssi: Int,
     val timestamp: Long,
+    val sessionId: String = "",
     val txPower: Int = 0,
     val isConnectable: Boolean = false,
     val serviceUuids: String = "",

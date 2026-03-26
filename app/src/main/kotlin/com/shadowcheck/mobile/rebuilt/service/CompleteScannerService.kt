@@ -14,17 +14,22 @@ import android.util.SparseArray
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import com.shadowcheck.mobile.core.model.CellularTower
+import com.shadowcheck.mobile.core.model.LocationSample
+import com.shadowcheck.mobile.core.model.ScanSession
 import com.shadowcheck.mobile.core.model.BleDevice
 import com.shadowcheck.mobile.core.model.BluetoothDevice
 import com.shadowcheck.mobile.domain.repository.BleDeviceRepository
 import com.shadowcheck.mobile.domain.repository.BluetoothDeviceRepository
 import com.shadowcheck.mobile.domain.repository.CellularTowerRepository
 import com.shadowcheck.mobile.domain.repository.HardwareMetadataRepository
+import com.shadowcheck.mobile.domain.repository.LocationSampleRepository
+import com.shadowcheck.mobile.domain.repository.ScanSessionRepository
 import com.shadowcheck.mobile.domain.repository.SensorReadingRepository
 import com.shadowcheck.mobile.wifi.domain.repository.WifiNetworkRepository
 import com.shadowcheck.mobile.wifi.model.WifiNetwork
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.UUID
 import javax.inject.Inject
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
@@ -49,6 +54,12 @@ class CompleteScannerService : Service() {
     @Inject
     lateinit var hardwareMetadataRepository: HardwareMetadataRepository
 
+    @Inject
+    lateinit var locationSampleRepository: LocationSampleRepository
+
+    @Inject
+    lateinit var scanSessionRepository: ScanSessionRepository
+
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var wifiManager: WifiManager? = null
     private var bluetoothAdapter: android.bluetooth.BluetoothAdapter? = null
@@ -62,6 +73,7 @@ class CompleteScannerService : Service() {
     private var bluetoothScanIntervalMs = BALANCED_BLUETOOTH_SCAN_INTERVAL_MS
     private var cellularScanIntervalMs = BALANCED_CELLULAR_SCAN_INTERVAL_MS
     private var currentThrottleMultiplier = 1
+    private var currentSessionId = ""
     
     private var isScanning = false
     private var currentLat = 0.0
@@ -82,10 +94,12 @@ class CompleteScannerService : Service() {
     private val pendingBleDevices = ConcurrentLinkedQueue<BleDevice>()
     private val pendingBluetoothDevices = ConcurrentLinkedQueue<BluetoothDevice>()
     private val pendingCellularTowers = ConcurrentLinkedQueue<CellularTower>()
+    private val pendingLocationSamples = ConcurrentLinkedQueue<LocationSample>()
     private var wifiDroppedCount = 0
     private var bleDroppedCount = 0
     private var bluetoothDroppedCount = 0
     private var cellDroppedCount = 0
+    private var locationDroppedCount = 0
     private var lastFlushStartedAt = 0L
     private var lastFlushCompletedAt = 0L
     private var lastFlushDurationMs = 0L
@@ -117,6 +131,7 @@ class CompleteScannerService : Service() {
                                 frequency = result.frequency,
                                 signalLevel = result.level,
                                 timestamp = now,
+                                sessionId = currentSessionId,
                                 latitude = currentLat,
                                 longitude = currentLon,
                                 channel = getChannelFromFreq(result.frequency),
@@ -180,6 +195,7 @@ class CompleteScannerService : Service() {
                         name = deviceName.orEmpty(),
                         rssi = result.rssi,
                         timestamp = now,
+                        sessionId = currentSessionId,
                         txPower = result.txPower,
                         isConnectable = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) result.isConnectable else false,
                         serviceUuids = result.scanRecord?.serviceUuids?.joinToString(",") ?: "",
@@ -225,6 +241,7 @@ class CompleteScannerService : Service() {
                                     rssi = rssi,
                                     deviceType = it.type,
                                     timestamp = now,
+                                    sessionId = currentSessionId,
                                     latitude = currentLat,
                                     longitude = currentLon,
                                     deviceClass = it.bluetoothClass?.deviceClass ?: 0,
@@ -254,6 +271,31 @@ class CompleteScannerService : Service() {
             currentBearing = location.bearing
             hasValidLocation = location.accuracy < 50f && currentLat != 0.0 && currentLon != 0.0
             sensorService?.updateLocation(location)
+            scope.launch {
+                enqueueLocationSample(
+                    LocationSample(
+                        latitude = location.latitude,
+                        longitude = location.longitude,
+                        timestamp = System.currentTimeMillis(),
+                        sessionId = currentSessionId,
+                        altitude = location.altitude,
+                        accuracy = location.accuracy,
+                        speed = location.speed,
+                        bearing = location.bearing,
+                        provider = location.provider ?: "",
+                        elapsedRealtimeNanos = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                            location.elapsedRealtimeNanos
+                        } else {
+                            0L
+                        },
+                        verticalAccuracyMeters = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            location.verticalAccuracyMeters
+                        } else {
+                            null
+                        }
+                    )
+                )
+            }
         }
         override fun onProviderEnabled(provider: String) {}
         override fun onProviderDisabled(provider: String) {}
@@ -295,6 +337,9 @@ class CompleteScannerService : Service() {
         )
         when (intent?.action) {
             "START" -> {
+                scope.launch {
+                    startNewSession()
+                }
                 startForeground(1, createNotification())
                 startScanning()
             }
@@ -402,6 +447,7 @@ class CompleteScannerService : Service() {
                                     mnc = identity.mnc,
                                     signalStrength = signal.level,
                                     signalQuality = signal.dbm,
+                                    sessionId = currentSessionId,
                                     rawDbm = signal.dbm,
                                     rawAsuLevel = signal.asuLevel,
                                     networkType = "GSM",
@@ -438,6 +484,7 @@ class CompleteScannerService : Service() {
                                     psc = identity.pci,
                                     signalStrength = signal.level,
                                     signalQuality = signal.dbm,
+                                    sessionId = currentSessionId,
                                     rawDbm = signal.dbm,
                                     rawAsuLevel = signal.asuLevel,
                                     rsrp = signal.rsrp,
@@ -470,6 +517,7 @@ class CompleteScannerService : Service() {
         sensorService?.stop()
         runBlocking {
             flushPendingWrites()
+            endCurrentSession()
         }
         updateMetricsSnapshot()
         if (wakeLock?.isHeld == true) {
@@ -541,12 +589,25 @@ class CompleteScannerService : Service() {
         }
     }
 
+    private suspend fun enqueueLocationSample(sample: LocationSample) {
+        trimQueueIfNeeded(
+            queue = pendingLocationSamples,
+            limit = LOCATION_QUEUE_LIMIT,
+            onDrop = { locationDroppedCount++ }
+        )
+        pendingLocationSamples.add(sample)
+        if (pendingLocationSamples.size >= LOCATION_BATCH_SIZE) {
+            flushLocationSamples()
+        }
+    }
+
     private suspend fun flushPendingWrites() {
         lastFlushStartedAt = System.currentTimeMillis()
         flushWifiNetworks()
         flushBleDevices()
         flushBluetoothDevices()
         flushCellularTowers()
+        flushLocationSamples()
         lastFlushCompletedAt = System.currentTimeMillis()
         lastFlushDurationMs = lastFlushCompletedAt - lastFlushStartedAt
         refreshPowerState()
@@ -593,11 +654,22 @@ class CompleteScannerService : Service() {
             cellUnique = cellUniqueCount,
             cellTotal = cellTotalCount,
             isScanning = isScanning,
+            wifiQueueDepth = pendingWifiNetworks.size,
+            bleQueueDepth = pendingBleDevices.size,
+            bluetoothQueueDepth = pendingBluetoothDevices.size,
+            cellQueueDepth = pendingCellularTowers.size,
             wifiDropped = wifiDroppedCount,
             bleDropped = bleDroppedCount,
             bluetoothDropped = bluetoothDroppedCount,
             cellDropped = cellDroppedCount,
-            lastFlushDurationMs = lastFlushDurationMs
+            lastFlushDurationMs = lastFlushDurationMs,
+            throttleMultiplier = currentThrottleMultiplier,
+            isCharging = isCharging,
+            isPowerSaveMode = isPowerSaveMode,
+            highPerformanceMode = highPerformanceMode,
+            wifiScanIntervalMs = wifiScanIntervalMs * currentThrottleMultiplier,
+            bluetoothScanIntervalMs = bluetoothScanIntervalMs * currentThrottleMultiplier,
+            cellularScanIntervalMs = cellularScanIntervalMs * currentThrottleMultiplier
         )
     }
 
@@ -627,6 +699,32 @@ class CompleteScannerService : Service() {
         if (batch.isNotEmpty()) {
             cellularTowerRepository.insertTowers(batch)
         }
+    }
+
+    private suspend fun flushLocationSamples() {
+        val batch = drainQueue(pendingLocationSamples)
+        if (batch.isNotEmpty()) {
+            locationSampleRepository.insertSamples(batch)
+        }
+    }
+
+    private suspend fun startNewSession() {
+        val sessionId = UUID.randomUUID().toString()
+        currentSessionId = sessionId
+        scanSessionRepository.upsertSession(
+            ScanSession(
+                sessionId = sessionId,
+                startedAt = System.currentTimeMillis(),
+                highPerformanceMode = highPerformanceMode,
+                status = "active"
+            )
+        )
+    }
+
+    private suspend fun endCurrentSession() {
+        if (currentSessionId.isBlank()) return
+        scanSessionRepository.endSession(currentSessionId, System.currentTimeMillis())
+        currentSessionId = ""
     }
 
     private fun <T> drainQueue(queue: ConcurrentLinkedQueue<T>): List<T> {
@@ -751,10 +849,12 @@ class CompleteScannerService : Service() {
         private const val BLE_BATCH_SIZE = 100
         private const val BT_BATCH_SIZE = 50
         private const val CELL_BATCH_SIZE = 50
+        private const val LOCATION_BATCH_SIZE = 50
         private const val WIFI_QUEUE_LIMIT = 500
         private const val BLE_QUEUE_LIMIT = 1_000
         private const val BT_QUEUE_LIMIT = 500
         private const val CELL_QUEUE_LIMIT = 500
+        private const val LOCATION_QUEUE_LIMIT = 2_000
         private const val BALANCED_WIFI_SCAN_INTERVAL_MS = 5_000L
         private const val BALANCED_BLUETOOTH_SCAN_INTERVAL_MS = 6_000L
         private const val BALANCED_CELLULAR_SCAN_INTERVAL_MS = 5_000L
@@ -764,7 +864,13 @@ class CompleteScannerService : Service() {
         const val EXTRA_HIGH_PERFORMANCE = "high_performance"
 
         @Volatile
-        private var latestCounts = ScanCounts(0, 0, 0, 0, 0, 0, false, 0, 0, 0, 0, 0)
+        private var latestCounts = ScanCounts(
+            0, 0, 0, 0, 0, 0, false,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 1, false, false, false,
+            0, 0, 0
+        )
 
         fun getCounts(context: Context): ScanCounts {
             return latestCounts
@@ -780,9 +886,20 @@ data class ScanCounts(
     val cellUnique: Int,
     val cellTotal: Int,
     val isScanning: Boolean,
+    val wifiQueueDepth: Int,
+    val bleQueueDepth: Int,
+    val bluetoothQueueDepth: Int,
+    val cellQueueDepth: Int,
     val wifiDropped: Int,
     val bleDropped: Int,
     val bluetoothDropped: Int,
     val cellDropped: Int,
-    val lastFlushDurationMs: Long
+    val lastFlushDurationMs: Long,
+    val throttleMultiplier: Int,
+    val isCharging: Boolean,
+    val isPowerSaveMode: Boolean,
+    val highPerformanceMode: Boolean,
+    val wifiScanIntervalMs: Long,
+    val bluetoothScanIntervalMs: Long,
+    val cellularScanIntervalMs: Long
 )
