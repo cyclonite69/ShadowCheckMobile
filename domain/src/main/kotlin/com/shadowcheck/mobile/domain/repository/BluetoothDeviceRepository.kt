@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface BluetoothDeviceRepository {
     fun getAllDevices(): Flow<List<BluetoothDevice>>
+    fun getDevicesByMacAddress(macAddress: String): Flow<List<BluetoothDevice>>
     fun getDeviceByMacAddress(macAddress: String): Flow<BluetoothDevice?>
     suspend fun insertDevice(device: BluetoothDevice): Long
     suspend fun insertDevices(devices: List<BluetoothDevice>)

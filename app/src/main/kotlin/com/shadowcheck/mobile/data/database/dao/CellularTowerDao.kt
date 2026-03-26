@@ -9,6 +9,9 @@ interface CellularTowerDao {
     @Query("SELECT * FROM cellular_towers ORDER BY timestamp DESC")
     fun getAllTowers(): Flow<List<CellularTowerEntity>>
 
+    @Query("SELECT * FROM cellular_towers WHERE cellId = :cellId ORDER BY timestamp ASC")
+    fun getTowersByCellId(cellId: Int): Flow<List<CellularTowerEntity>>
+
     @Query("SELECT * FROM cellular_towers WHERE cellId = :cellId ORDER BY timestamp DESC LIMIT 1")
     fun getTowerByCellId(cellId: Int): Flow<CellularTowerEntity?>
 

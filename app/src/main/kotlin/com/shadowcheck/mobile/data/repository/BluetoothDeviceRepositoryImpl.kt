@@ -26,6 +26,12 @@ class BluetoothDeviceRepositoryImpl @Inject constructor(
         }.flowOn(dispatcher)
     }
 
+    override fun getDevicesByMacAddress(macAddress: String): Flow<List<BluetoothDevice>> {
+        return bluetoothDao.getDevicesByMacAddress(macAddress)
+            .map { entities -> entities.map { it.toDomainModel() } }
+            .flowOn(dispatcher)
+    }
+
     override fun getDeviceByMacAddress(macAddress: String): Flow<BluetoothDevice?> {
         return bluetoothDao.getDeviceByMacAddress(macAddress).map { it?.toDomainModel() }.flowOn(dispatcher)
     }

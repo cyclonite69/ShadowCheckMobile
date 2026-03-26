@@ -1,6 +1,7 @@
 package com.shadowcheck.mobile.rebuilt.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -23,7 +24,8 @@ import com.shadowcheck.mobile.rebuilt.presentation.theme.ShadowCheckColors
 @Composable
 fun CellularListScreen(
     viewModel: CellularListViewModel = hiltViewModel(),
-    onBack: () -> Unit = {}
+    onBack: () -> Unit = {},
+    onTowerClick: (Int) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     
@@ -40,16 +42,20 @@ fun CellularListScreen(
         
         LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp)) {
             items(uiState.towers) { tower ->
-                CellularCard(tower, uiState.sightingsCounts[tower.cellId] ?: 0)
+                CellularCard(
+                    tower = tower,
+                    sightings = uiState.sightingsCounts[tower.cellId] ?: 0,
+                    onClick = { onTowerClick(tower.cellId) }
+                )
             }
         }
     }
 }
 
 @Composable
-fun CellularCard(tower: CellularTower, sightings: Int) {
+fun CellularCard(tower: CellularTower, sightings: Int, onClick: () -> Unit = {}) {
     Card(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = ShadowCheckColors.Surface)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {

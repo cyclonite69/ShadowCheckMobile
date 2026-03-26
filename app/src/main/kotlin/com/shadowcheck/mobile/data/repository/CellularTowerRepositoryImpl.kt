@@ -30,6 +30,12 @@ class CellularTowerRepositoryImpl @Inject constructor(
         }.flowOn(dispatcher)
     }
 
+    override fun getTowersByCellId(cellId: Int): Flow<List<CellularTower>> {
+        return cellularTowerDao.getTowersByCellId(cellId)
+            .map { entities -> entities.map { it.toDomainModel() } }
+            .flowOn(dispatcher)
+    }
+
     override fun getTowerByCellId(cellId: Int): Flow<CellularTower?> {
         return cellularTowerDao.getTowerByCellId(cellId)
             .map { it?.toDomainModel() }

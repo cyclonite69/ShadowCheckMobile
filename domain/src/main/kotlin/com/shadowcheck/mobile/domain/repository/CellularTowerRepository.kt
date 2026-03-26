@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface CellularTowerRepository {
     fun getAllTowers(): Flow<List<CellularTower>>
+    fun getTowersByCellId(cellId: Int): Flow<List<CellularTower>>
     fun getTowerByCellId(cellId: Int): Flow<CellularTower?>
     suspend fun insertTower(tower: CellularTower): Long
     suspend fun insertTowers(towers: List<CellularTower>)

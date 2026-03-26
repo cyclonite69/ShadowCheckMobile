@@ -1,6 +1,7 @@
 package com.shadowcheck.mobile.rebuilt.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -23,7 +24,8 @@ import com.shadowcheck.mobile.core.model.BluetoothDevice
 @Composable
 fun BluetoothListScreen(
     viewModel: BluetoothListViewModel = hiltViewModel(),
-    onBack: () -> Unit = {}
+    onBack: () -> Unit = {},
+    onDeviceClick: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     
@@ -40,16 +42,20 @@ fun BluetoothListScreen(
         
         LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp)) {
             items(uiState.devices) { device ->
-                BluetoothCard(device, uiState.sightingsCounts[device.macAddress] ?: 0)
+                BluetoothCard(
+                    device = device,
+                    sightings = uiState.sightingsCounts[device.macAddress] ?: 0,
+                    onClick = { onDeviceClick(device.macAddress) }
+                )
             }
         }
     }
 }
 
 @Composable
-fun BluetoothCard(device: BluetoothDevice, sightings: Int) {
+fun BluetoothCard(device: BluetoothDevice, sightings: Int, onClick: () -> Unit = {}) {
     Card(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = ShadowCheckColors.Surface)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {

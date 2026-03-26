@@ -82,13 +82,15 @@ fun MainScreen() {
             composable("bluetooth") {
                 currentRoute = "bluetooth"
                 com.shadowcheck.mobile.rebuilt.ui.screens.BluetoothListScreen(
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    onDeviceClick = { macAddress -> navController.navigate("bluetooth_detail/$macAddress") }
                 )
             }
             composable("cellular") {
                 currentRoute = "cellular"
                 com.shadowcheck.mobile.rebuilt.ui.screens.CellularListScreen(
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    onTowerClick = { cellId -> navController.navigate("cellular_detail/$cellId") }
                 )
             }
             composable("map") {
@@ -172,12 +174,30 @@ fun MainScreen() {
             composable("bluetooth_list") {
                 currentRoute = "bluetooth_list"
                 com.shadowcheck.mobile.rebuilt.ui.screens.BluetoothListScreen(
+                    onBack = { navController.popBackStack() },
+                    onDeviceClick = { macAddress -> navController.navigate("bluetooth_detail/$macAddress") }
+                )
+            }
+            composable("bluetooth_detail/{macAddress}") { backStackEntry ->
+                currentRoute = "bluetooth_detail"
+                val macAddress = backStackEntry.arguments?.getString("macAddress") ?: ""
+                com.shadowcheck.mobile.rebuilt.ui.screens.BluetoothDetailScreen(
+                    macAddress = macAddress,
                     onBack = { navController.popBackStack() }
                 )
             }
             composable("cellular_list") {
                 currentRoute = "cellular_list"
                 com.shadowcheck.mobile.rebuilt.ui.screens.CellularListScreen(
+                    onBack = { navController.popBackStack() },
+                    onTowerClick = { cellId -> navController.navigate("cellular_detail/$cellId") }
+                )
+            }
+            composable("cellular_detail/{cellId}") { backStackEntry ->
+                currentRoute = "cellular_detail"
+                val cellId = backStackEntry.arguments?.getString("cellId")?.toIntOrNull() ?: -1
+                com.shadowcheck.mobile.rebuilt.ui.screens.CellularDetailScreen(
+                    cellId = cellId,
                     onBack = { navController.popBackStack() }
                 )
             }

@@ -9,6 +9,9 @@ interface BluetoothDeviceDao {
     @Query("SELECT * FROM bluetooth_devices ORDER BY timestamp DESC")
     fun getAllDevices(): Flow<List<BluetoothDeviceEntity>>
 
+    @Query("SELECT * FROM bluetooth_devices WHERE macAddress = :macAddress ORDER BY timestamp ASC")
+    fun getDevicesByMacAddress(macAddress: String): Flow<List<BluetoothDeviceEntity>>
+
     @Query("SELECT * FROM bluetooth_devices WHERE macAddress = :macAddress LIMIT 1")
     fun getDeviceByMacAddress(macAddress: String): Flow<BluetoothDeviceEntity?>
 
